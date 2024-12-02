@@ -33,30 +33,19 @@ function(unigraph_unit unit_name)
     endif ()
 
     if (target_type STREQUAL "Executable")
-        add_executable(${target_name}
-                ${PARSED_ARGS_SOURCES}
-                ${PARSED_ARGS_HEADERS}
-        )
+        add_executable(${target_name} ${PARSED_ARGS_SOURCES} ${PARSED_ARGS_HEADERS})
         target_include_directories(${target_name} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
     elseif (target_type STREQUAL "StaticLibrary")
-        add_library(${target_name} STATIC
-                ${PARSED_ARGS_SOURCES}
-                ${PARSED_ARGS_HEADERS}
-        )
+        add_library(${target_name} STATIC ${PARSED_ARGS_SOURCES} ${PARSED_ARGS_HEADERS})
         target_include_directories(${target_name} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
     elseif (target_type STREQUAL "SharedLibrary")
-        add_library(${target_name} SHARED
-                ${PARSED_ARGS_SOURCES}
-                ${PARSED_ARGS_HEADERS}
-        )
+        add_library(${target_name} SHARED ${PARSED_ARGS_SOURCES} ${PARSED_ARGS_HEADERS})
         target_include_directories(${target_name} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
     elseif (target_type STREQUAL "Interface")
         if (PARSED_ARGS_SOURCES)
             message(FATAL_ERROR "Interface units cannot have source files, only header files")
         endif ()
-        add_library(${target_name} INTERFACE
-                ${PARSED_ARGS_HEADERS}
-        )
+        add_library(${target_name} INTERFACE ${PARSED_ARGS_HEADERS})
         target_include_directories(${target_name} INTERFACE ${CMAKE_CURRENT_LIST_DIR})
     endif ()
 
