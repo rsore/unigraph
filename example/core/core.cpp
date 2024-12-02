@@ -2,7 +2,8 @@
 
 #include <iostream>
 
-void print_hello_world()
+void
+print_hello_world()
 {
     std::cout << "Hello world!" << std::endl;
 }

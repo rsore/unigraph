@@ -3,4 +3,4 @@
 
 void print_hello_world();
 
-#endif //CORE_HPP
+#endif // CORE_HPP
