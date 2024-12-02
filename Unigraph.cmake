@@ -52,9 +52,7 @@ function(unigraph_unit unit_name)
     set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE CXX)
 
     if (PARSED_ARGS_DEPEND)
-        target_link_libraries(${target_name} PUBLIC
-                ${PARSED_ARGS_DEPEND}
-        )
+        target_link_libraries(${target_name} PUBLIC ${PARSED_ARGS_DEPEND})
     endif ()
 endfunction(unigraph_unit)
 
