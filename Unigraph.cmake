@@ -4,11 +4,11 @@ set(UNIGRAPH_CURRENT_UNIT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 
 function(unigraph_unit unit_name)
     cmake_parse_arguments(
-            PARSED_ARGS
-            ""
-            "TYPE"
-            "SOURCES;HEADERS;DEPEND"
-            ${ARGN}
+        PARSED_ARGS
+        ""
+        "TYPE"
+        "SOURCES;HEADERS;DEPEND"
+        ${ARGN}
     )
 
     if (NOT PARSED_ARGS_SOURCES AND NOT PARSED_ARGS_HEADERS)
