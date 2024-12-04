@@ -11,10 +11,6 @@ function(unigraph_unit unit_name)
         ${ARGN}
     )
 
-    if (NOT PARSED_ARGS_SOURCES AND NOT PARSED_ARGS_HEADERS)
-        message(FATAL_ERROR "You must provide at least one source or header file")
-    endif ()
-
     set(target_name "${unit_name}")
 
     list(TRANSFORM PARSED_ARGS_SOURCES PREPEND "${UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
@@ -37,31 +33,41 @@ function(unigraph_unit unit_name)
     endif ()
 
     if (target_type STREQUAL "Executable")
-        add_executable(${target_name} ${PARSED_ARGS_SOURCES} ${PARSED_ARGS_HEADERS})
-        set(include_dir_visibility PRIVATE)
+        add_executable(${target_name})
+        set(header_visibility PRIVATE)
     elseif (target_type STREQUAL "StaticLibrary")
-        add_library(${target_name} STATIC ${PARSED_ARGS_SOURCES} ${PARSED_ARGS_HEADERS})
-        set(include_dir_visibility PUBLIC)
+        add_library(${target_name} STATIC)
+        set(header_visibility PUBLIC)
     elseif (target_type STREQUAL "SharedLibrary")
-        add_library(${target_name} SHARED ${PARSED_ARGS_SOURCES} ${PARSED_ARGS_HEADERS})
-        set(include_dir_visibility PUBLIC)
+        add_library(${target_name} SHARED)
+        set(header_visibility PUBLIC)
     elseif (target_type STREQUAL "Interface")
-        if (PARSED_ARGS_SOURCES)
-            message(FATAL_ERROR "Interface units cannot have source files, only header files")
-        endif ()
-        add_library(${target_name} INTERFACE ${PARSED_ARGS_HEADERS})
-        set(include_dir_visibility INTERFACE)
+        add_library(${target_name} INTERFACE)
+        set(header_visibility INTERFACE)
     endif ()
 
-    target_include_directories(${target_name} ${include_dir_visibility} ${CMAKE_CURRENT_LIST_DIR})
+    target_sources(${target_name}
+        PRIVATE
+        ${PARSED_ARGS_SOURCES}
+    )
+
+    target_sources(${target_name}
+        ${header_visibility}
+        FILE_SET unigraph_${target_name}_headers
+        TYPE HEADERS
+        BASE_DIRS ${UNIGRAPH_CURRENT_UNIT_DIRECTORY}
+        FILES ${PARSED_ARGS_HEADERS}
+    )
+
     set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE CXX)
 
     if (PARSED_ARGS_DEPEND)
         if (target_type STREQUAL "Interface")
-            target_link_libraries(${target_name} INTERFACE ${PARSED_ARGS_DEPEND})
+            set(link_visibility INTERFACE)
         else ()
-            target_link_libraries(${target_name} PUBLIC ${PARSED_ARGS_DEPEND})
+            set(link_visibility PUBLIC)
         endif ()
+        target_link_libraries(${target_name} ${link_visibility} ${PARSED_ARGS_DEPEND})
     endif ()
 endfunction(unigraph_unit)
 

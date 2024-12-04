@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.23)
 project(Unigraph)
 
 option(UNIGRAPH_BUILD_EXAMPLE "Build the example project" ON)
