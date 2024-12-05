@@ -106,7 +106,7 @@ function(unigraph_unit unit_name)
     if (PARSED_ARGS_NAME)
         set(target_name "${PARSED_ARGS_NAME}")
     else ()
-        set(target_name "${CMAKE_PROJECT_NAME}_${unit_name}")
+        set(target_name "${PROJECT_NAME}_${unit_name}")
     endif ()
 
     set_property(GLOBAL PROPERTY UNIGRAPH_UNIT_NAME_TO_TARGET_NAME_MAP
