@@ -7,6 +7,8 @@
 # Configuration options:
 #  - UNIGRAPH_TARGET_NAME_PREFIX: String used as prefix in automatic target names.
 #                                 If not specified, ${PROJECT_NAME} is used
+#  - UNIGRAPH_TEST_FRAMEWORK: Test framework to link with for auto-generated test targets
+#                             when a unit defines TEST_SOURCES
 #
 # User-facing function:
 #  - unigraph_unit: Defines a new unit with a set of sources, headers, and dependencies.
@@ -17,9 +19,14 @@ if (CMAKE_VERSION VERSION_LESS "3.23")
             "Please update your CMake version.")
 endif ()
 
-include(CMakeParseArguments)
+set(UNIGRAPH_DUMMY_SOURCE_FILE "${CMAKE_CURRENT_BINARY_DIR}/null.cpp")
+file(WRITE "${UNIGRAPH_DUMMY_SOURCE_FILE}") # Used for generated targets with no real sources
 
-set(UNIGRAPH_CURRENT_UNIT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+
+include(CMakeParseArguments)
+include(FetchContent)
+
+set(UNIGRAPH_CURRENT_UNIT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}) # Used during unit.cmake parsing
 
 set(_UNIGRAPH_UNIT_LIST_DELIMITER "|")
 set(_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER "*")
@@ -30,9 +37,12 @@ endif ()
 
 set_property(GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
 
-function(_unigraph_message level message)
+set(UNIGRAPH_VALID_TEST_FRAMEWORKS "Catch2" "GoogleTest")
+set_property(GLOBAL PROPERTY UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN "")
+
+macro(_unigraph_message level message)
     message(${level} "[ Unigraph ] ${message}")
-endfunction()
+endmacro()
 
 # Utility function to convert a set of unit data to a stringified "struct)
 # We need to use different delimiters for internal lists, to maintain parsability
@@ -44,6 +54,7 @@ function(_unigraph_pack_unit_struct
         target_sources
         target_headers
         target_dependencies
+        target_test_sources
         out_str)
 
     if (NOT target_sources STREQUAL "")
@@ -64,6 +75,12 @@ function(_unigraph_pack_unit_struct
         set(target_dependencies_packed "")
     endif ()
 
+    if (NOT target_test_sources STREQUAL "")
+        string(REPLACE ";" "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" target_test_sources_packed "${target_test_sources}")
+    else ()
+        set(target_test_sources_packed "")
+    endif ()
+
     string(CONCAT packed_str
             "${unit_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
             "${unit_dir}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
@@ -71,7 +88,8 @@ function(_unigraph_pack_unit_struct
             "${target_type}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
             "${target_sources_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
             "${target_headers_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-            "${target_dependencies_packed}")
+            "${target_dependencies_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+            "${target_test_sources_packed}")
     set(${out_str} ${packed_str} PARENT_SCOPE)
 endfunction(_unigraph_pack_unit_struct)
 
@@ -84,7 +102,8 @@ function(_unigraph_unpack_unit_struct
         out_target_type
         out_target_sources
         out_target_headers
-        out_target_dependencies)
+        out_target_dependencies
+        out_target_test_sources)
     string(REPLACE "${_UNIGRAPH_UNIT_LIST_DELIMITER}" ";" unit_list "${packed_str}")
 
     list(LENGTH unit_list num_elements)
@@ -99,6 +118,7 @@ function(_unigraph_unpack_unit_struct
     list(GET unit_list 4 sources_packed)
     list(GET unit_list 5 headers_packed)
     list(GET unit_list 6 dependencies_packed)
+    list(GET unit_list 7 test_sources_packed)
 
     if (NOT sources_packed STREQUAL "")
         string(REPLACE "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" ";" target_sources "${sources_packed}")
@@ -118,6 +138,12 @@ function(_unigraph_unpack_unit_struct
         set(target_dependencies "")
     endif ()
 
+    if (NOT test_sources_packed STREQUAL "")
+        string(REPLACE "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" ";" target_test_sources "${test_sources_packed}")
+    else ()
+        set(target_test_sources "")
+    endif ()
+
     set(${out_unit_name} "${unit_name}" PARENT_SCOPE)
     set(${out_unit_dir} "${unit_dir}" PARENT_SCOPE)
     set(${out_target_name} "${target_name}" PARENT_SCOPE)
@@ -125,6 +151,7 @@ function(_unigraph_unpack_unit_struct
     set(${out_target_sources} "${target_sources}" PARENT_SCOPE)
     set(${out_target_headers} "${target_headers}" PARENT_SCOPE)
     set(${out_target_dependencies} "${target_dependencies}" PARENT_SCOPE)
+    set(${out_target_test_sources} "${target_test_sources}" PARENT_SCOPE)
 endfunction(_unigraph_unpack_unit_struct)
 
 # Utility function to iterate over all user-defined units, and create their cmake targets,
@@ -139,7 +166,8 @@ function(_unigraph_make_unit_targets)
                 target_type
                 target_sources
                 target_headers
-                target_dependencies)
+                target_dependencies
+                target_test_sources)
 
         _unigraph_message(STATUS "Creating target '${target_name}' of type '${target_type}'")
         if (target_type STREQUAL "Executable")
@@ -180,8 +208,37 @@ function(_unigraph_make_unit_targets)
             _unigraph_resolve_target_name(${dependency} resolved_dependency)
             target_link_libraries(${target_name} ${link_visibility} ${resolved_dependency})
         endforeach ()
+
+        if (NOT target_test_sources STREQUAL "")
+            set(test_target "${target_name}_Test")
+
+            get_property(test_framework_target_with_main GLOBAL PROPERTY UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN)
+
+            add_executable(${test_target} ${target_test_sources})
+            target_link_libraries(${test_target} PRIVATE ${target_name} ${test_framework_target_with_main})
+        endif ()
     endforeach ()
 endfunction(_unigraph_make_unit_targets)
+
+function(_unigraph_resolve_target_name in_unit_name out_target_name)
+    get_property(unit_list GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
+    foreach (unit IN LISTS unit_list)
+        _unigraph_unpack_unit_struct(${unit}
+                unit_name
+                unit_dir
+                target_name
+                target_type
+                target_sources
+                target_headers
+                target_dependencies
+                target_test_sources)
+        if (in_unit_name STREQUAL unit_name)
+            set(${out_target_name} ${target_name} PARENT_SCOPE)
+            return()
+        endif ()
+    endforeach ()
+    set(${out_target_name} ${in_unit_name} PARENT_SCOPE)
+endfunction(_unigraph_resolve_target_name)
 
 # User-facing function to define a unit
 function(unigraph_unit unit_name)
@@ -189,7 +246,7 @@ function(unigraph_unit unit_name)
             PARSED_ARGS
             ""
             "TYPE"
-            "SOURCES;HEADERS;DEPEND;NAME"
+            "SOURCES;HEADERS;DEPEND;NAME;TEST_SOURCES"
             ${ARGN}
     )
 
@@ -224,6 +281,17 @@ function(unigraph_unit unit_name)
         endif ()
     endif ()
 
+    if (PARSED_ARGS_TEST_SOURCES)
+        if (target_type STREQUAL "Executable")
+            _unigraph_message(FATAL_ERROR "Executable units cannot have TEST_SOURCES")
+        endif ()
+        get_property(test_framework_target_with_main GLOBAL PROPERTY UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN)
+        if (test_framework_target_with_main STREQUAL "")
+            _unigraph_message(FATAL_ERROR "TEST_SOURCES defined, but not test framework has been configured. Set variable UNIGRAPH_TEST_FRAMEWORK to one of '${UNIGRAPH_VALID_TEST_FRAMEWORKS}' before including Unigraph")
+        endif ()
+        list(TRANSFORM PARSED_ARGS_TEST_SOURCES PREPEND "${UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
+    endif ()
+
     _unigraph_pack_unit_struct(
             ${unit_name}
             ${UNIGRAPH_CURRENT_UNIT_DIRECTORY}
@@ -232,6 +300,7 @@ function(unigraph_unit unit_name)
             "${PARSED_ARGS_SOURCES}"
             "${PARSED_ARGS_HEADERS}"
             "${PARSED_ARGS_DEPEND}"
+            "${PARSED_ARGS_TEST_SOURCES}"
             unit
     )
 
@@ -240,26 +309,40 @@ function(unigraph_unit unit_name)
     set_property(GLOBAL PROPERTY UNIGRAPH_UNITS_LIST ${unit_list})
 endfunction(unigraph_unit)
 
-function(_unigraph_resolve_target_name in_unit_name out_target_name)
-    get_property(unit_list GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
-    foreach (unit IN LISTS unit_list)
-        _unigraph_unpack_unit_struct(${unit}
-                unit_name
-                unit_dir
-                target_name
-                target_type
-                target_sources
-                target_headers
-                target_dependencies)
-        if (in_unit_name STREQUAL unit_name)
-            set(${out_target_name} ${target_name} PARENT_SCOPE)
-            return()
-        endif ()
-    endforeach ()
-    set(${out_target_name} ${in_unit_name} PARENT_SCOPE)
-endfunction(_unigraph_resolve_target_name)
+function(initialize_google_test)
+    _unigraph_message(FATAL_ERROR "Support for GoogleTest not yet implemented")
+endfunction()
+
+function(initialize_catch2)
+    FetchContent_Declare(
+            Catch2
+            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+            GIT_TAG v3.7.1
+    )
+    FetchContent_MakeAvailable(Catch2)
+    set_property(GLOBAL PROPERTY UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN "Catch2::Catch2WithMain")
+endfunction()
+
+function(initialize_test_framework framework)
+    list(FIND UNIGRAPH_VALID_TEST_FRAMEWORKS "${framework}" index)
+    if (index EQUAL -1)
+        _unigraph_message(FATAL_ERROR "Test framework '${framework}' is not supported. Supported frameworks are: ${UNIGRAPH_VALID_TEST_FRAMEWORKS}")
+    endif ()
+
+    if (framework STREQUAL "GoogleTest")
+        initialize_google_test()
+    elseif (framework STREQUAL "Catch2")
+        initialize_catch2()
+    endif ()
+    _unigraph_message(STATUS "Using test framework '${framework}'")
+endfunction(initialize_test_framework)
+
 
 # Main module entry, recursively search for and include all unit.cmake files, and then process the units
+if (UNIGRAPH_TEST_FRAMEWORK)
+    initialize_test_framework("${UNIGRAPH_TEST_FRAMEWORK}")
+endif ()
+
 file(GLOB_RECURSE UNIGRAPH_UNIT_CMAKE_FILES "${CMAKE_CURRENT_LIST_DIR}/**/unit.cmake")
 foreach (file IN LISTS UNIGRAPH_UNIT_CMAKE_FILES)
     _unigraph_message(STATUS "Found unit.cmake: ${file}")
