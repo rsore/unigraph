@@ -12,6 +12,8 @@ set(_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER "*")
 
 set_property(GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
 
+# Utility function to convert a set of unit data to a stringified "struct)
+# We need to use different delimiters for internal lists, to maintain parsability
 function(_unigraph_pack_unit_struct
         unit_name
         unit_dir
@@ -43,7 +45,9 @@ function(_unigraph_pack_unit_struct
     set(${out_str} "${unit_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}${unit_dir}${_UNIGRAPH_UNIT_LIST_DELIMITER}${target_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}${target_type}${_UNIGRAPH_UNIT_LIST_DELIMITER}${target_sources_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}${target_headers_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}${target_dependencies_packed}" PARENT_SCOPE)
 endfunction(_unigraph_pack_unit_struct)
 
-function(_unigraph_unpack_unit_struct packed_str
+# Utility function to take a stringified unit and extract the different fields
+function(_unigraph_unpack_unit_struct
+        packed_str
         out_unit_name
         out_unit_dir
         out_target_name
@@ -93,6 +97,63 @@ function(_unigraph_unpack_unit_struct packed_str
     set(${out_target_dependencies} "${target_dependencies}" PARENT_SCOPE)
 endfunction(_unigraph_unpack_unit_struct)
 
+# Utility function to iterate over all user-defined units, and create their cmake targets,
+# resolving dependencies for linkage.
+function(_unigraph_make_unit_targets)
+    get_property(unit_list GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
+    foreach (unit IN LISTS unit_list)
+        _unigraph_unpack_unit_struct(${unit}
+                unit_name
+                unit_dir
+                target_name
+                target_type
+                target_sources
+                target_headers
+                target_dependencies)
+
+        message(STATUS "Creating target '${target_name}' of type '${target_type}'")
+        if (target_type STREQUAL "Executable")
+            add_executable(${target_name})
+            set(header_visibility PRIVATE)
+        elseif (target_type STREQUAL "StaticLibrary")
+            add_library(${target_name} STATIC)
+            set(header_visibility PUBLIC)
+        elseif (target_type STREQUAL "SharedLibrary")
+            add_library(${target_name} SHARED)
+            set(header_visibility PUBLIC)
+        elseif (target_type STREQUAL "Interface")
+            add_library(${target_name} INTERFACE)
+            set(header_visibility INTERFACE)
+        endif ()
+
+        target_sources(${target_name}
+                PRIVATE
+                ${target_sources}
+        )
+
+        target_sources(${target_name}
+                ${header_visibility}
+                FILE_SET unigraph_${target_name}_headers
+                TYPE HEADERS
+                BASE_DIRS ${unit_dir}
+                FILES ${target_headers}
+        )
+
+        set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE CXX)
+
+        if (target_type STREQUAL "Interface")
+            set(link_visibility INTERFACE)
+        else ()
+            set(link_visibility PUBLIC)
+        endif ()
+        foreach (dependency IN LISTS target_dependencies)
+            _unigraph_resolve_target_name(${dependency} resolved_dependency)
+            target_link_libraries(${target_name} ${link_visibility} ${resolved_dependency})
+        endforeach ()
+    endforeach ()
+endfunction(_unigraph_make_unit_targets)
+
+# User-facing function to define a unit
 function(unigraph_unit unit_name)
     cmake_parse_arguments(
             PARSED_ARGS
@@ -167,60 +228,6 @@ function(_unigraph_resolve_target_name in_unit_name out_target_name)
     endforeach ()
     set(${out_target_name} ${in_unit_name} PARENT_SCOPE)
 endfunction(_unigraph_resolve_target_name)
-
-function(_unigraph_make_unit_targets)
-    get_property(unit_list GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
-    foreach (unit IN LISTS unit_list)
-        _unigraph_unpack_unit_struct(${unit}
-                unit_name
-                unit_dir
-                target_name
-                target_type
-                target_sources
-                target_headers
-                target_dependencies)
-
-        message(STATUS "Creating target '${target_name}' of type '${target_type}'")
-        if (target_type STREQUAL "Executable")
-            add_executable(${target_name})
-            set(header_visibility PRIVATE)
-        elseif (target_type STREQUAL "StaticLibrary")
-            add_library(${target_name} STATIC)
-            set(header_visibility PUBLIC)
-        elseif (target_type STREQUAL "SharedLibrary")
-            add_library(${target_name} SHARED)
-            set(header_visibility PUBLIC)
-        elseif (target_type STREQUAL "Interface")
-            add_library(${target_name} INTERFACE)
-            set(header_visibility INTERFACE)
-        endif ()
-
-        target_sources(${target_name}
-                PRIVATE
-                ${target_sources}
-        )
-
-        target_sources(${target_name}
-                ${header_visibility}
-                FILE_SET unigraph_${target_name}_headers
-                TYPE HEADERS
-                BASE_DIRS ${unit_dir}
-                FILES ${target_headers}
-        )
-
-        set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE CXX)
-
-        if (target_type STREQUAL "Interface")
-            set(link_visibility INTERFACE)
-        else ()
-            set(link_visibility PUBLIC)
-        endif ()
-        foreach (dependency IN LISTS target_dependencies)
-            _unigraph_resolve_target_name(${dependency} resolved_dependency)
-            target_link_libraries(${target_name} ${link_visibility} ${resolved_dependency})
-        endforeach ()
-    endforeach ()
-endfunction(_unigraph_make_unit_targets)
 
 # Recursively search for all unit.cmake files, and process them
 file(GLOB_RECURSE UNIGRAPH_UNIT_CMAKE_FILES "${CMAKE_CURRENT_LIST_DIR}/**/unit.cmake")
