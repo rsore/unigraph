@@ -1,3 +1,17 @@
+# Unigraph
+#
+# CMake module for declarative target creation and dependency management.
+# It allows users to define targets with dependencies, headers, and sources
+# in a simple, declarative style, and automatically resolves and builds them.
+#
+# Configuration options:
+#  - UNIGRAPH_TARGET_NAME_PREFIX: String used as prefix in automatic target names.
+#                                 If not specified, ${PROJECT_NAME} is used
+#
+# User-facing function:
+#  - unigraph_unit: Defines a new unit with a set of sources, headers, and dependencies.
+#                   Expected to be used inside unit.cmake files
+
 if (CMAKE_VERSION VERSION_LESS "3.23")
     message(FATAL_ERROR "The module 'Unigraph' requires at least CMake 3.23. "
             "Please update your CMake version.")
@@ -9,6 +23,10 @@ set(UNIGRAPH_CURRENT_UNIT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 
 set(_UNIGRAPH_UNIT_LIST_DELIMITER "|")
 set(_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER "*")
+
+if (NOT UNIGRAPH_TARGET_NAME_PREFIX)
+    set(UNIGRAPH_TARGET_NAME_PREFIX "${PROJECT_NAME}")
+endif ()
 
 set_property(GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
 
@@ -178,7 +196,7 @@ function(unigraph_unit unit_name)
     if (PARSED_ARGS_NAME)
         set(target_name "${PARSED_ARGS_NAME}")
     else ()
-        set(target_name "${PROJECT_NAME}_${unit_name}")
+        set(target_name "${UNIGRAPH_TARGET_NAME_PREFIX}_${unit_name}")
     endif ()
 
     if (PARSED_ARGS_SOURCES)
