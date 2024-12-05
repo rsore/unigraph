@@ -1,0 +1,14 @@
+unigraph_unit(Geometry
+    DEPEND
+        MathConstants
+        Algorithms
+    HEADERS
+        line_segment.hpp
+        circle.hpp
+    SOURCES
+        line_segment.cpp
+        circle.cpp
+    TEST_SOURCES
+        line_segment_test.cpp
+        circle_test.cpp
+)

@@ -4,5 +4,5 @@ project(Unigraph)
 option(UNIGRAPH_BUILD_EXAMPLE "Build the example project" ON)
 
 if (UNIGRAPH_BUILD_EXAMPLE)
-    add_subdirectory(example)
+    add_subdirectory(examples)
 endif ()
