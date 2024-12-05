@@ -157,6 +157,9 @@ endfunction(_unigraph_unpack_unit_struct)
 # Utility function to iterate over all user-defined units, and create their cmake targets,
 # resolving dependencies for linkage.
 function(_unigraph_make_unit_targets)
+    set(all_test_sources "")
+    set(all_test_dependencies "")
+
     get_property(unit_list GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
     foreach (unit IN LISTS unit_list)
         _unigraph_unpack_unit_struct(${unit}
@@ -209,15 +212,28 @@ function(_unigraph_make_unit_targets)
             target_link_libraries(${target_name} ${link_visibility} ${resolved_dependency})
         endforeach ()
 
-        if (NOT target_test_sources STREQUAL "")
+        # If there are tests sources defined for the unit, create a unit test target
+        if (target_test_sources)
             set(test_target "${target_name}_Test")
-
             get_property(test_framework_target_with_main GLOBAL PROPERTY UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN)
-
             add_executable(${test_target} ${target_test_sources})
             target_link_libraries(${test_target} PRIVATE ${target_name} ${test_framework_target_with_main})
+
+            list(APPEND all_test_sources ${target_test_sources})
+            list(APPEND all_test_dependencies ${target_name})
         endif ()
     endforeach ()
+
+    # If there are any test sources in the entire project, collect them in one amalgamated test target
+    if (all_test_sources)
+        set(all_tests_target "${PROJECT_NAME}_All_Tests")
+        add_executable(${all_tests_target} ${all_test_sources})
+        foreach (dependency IN LISTS all_test_dependencies)
+            target_link_libraries(${all_tests_target} PRIVATE ${dependency})
+        endforeach ()
+        get_property(test_framework_target_with_main GLOBAL PROPERTY UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN)
+        target_link_libraries(${all_tests_target} PRIVATE ${test_framework_target_with_main})
+    endif ()
 endfunction(_unigraph_make_unit_targets)
 
 function(_unigraph_resolve_target_name in_unit_name out_target_name)
