@@ -42,7 +42,15 @@ function(_unigraph_pack_unit_struct
         set(target_dependencies_packed "")
     endif ()
 
-    set(${out_str} "${unit_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}${unit_dir}${_UNIGRAPH_UNIT_LIST_DELIMITER}${target_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}${target_type}${_UNIGRAPH_UNIT_LIST_DELIMITER}${target_sources_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}${target_headers_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}${target_dependencies_packed}" PARENT_SCOPE)
+    string(CONCAT packed_str
+            "${unit_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+            "${unit_dir}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+            "${target_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+            "${target_type}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+            "${target_sources_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+            "${target_headers_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+            "${target_dependencies_packed}")
+    set(${out_str} ${packed_str} PARENT_SCOPE)
 endfunction(_unigraph_pack_unit_struct)
 
 # Utility function to take a stringified unit and extract the different fields
