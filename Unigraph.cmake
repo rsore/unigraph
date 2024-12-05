@@ -1,3 +1,8 @@
+if (CMAKE_VERSION VERSION_LESS "3.23")
+    message(FATAL_ERROR "The module 'Unigraph' requires at least CMake 3.23. "
+        "Please update your CMake version.")
+endif ()
+
 include(CMakeParseArguments)
 
 set(UNIGRAPH_CURRENT_UNIT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
@@ -26,7 +31,8 @@ function(unigraph_unit unit_name)
         set(user_defined_target_type "${PARSED_ARGS_TYPE}")
         list(FIND valid_target_types "${user_defined_target_type}" index)
         if (index EQUAL -1)
-            message(WARNING "Target type '${user_defined_target_type}' is ill-formed, must be one of '${valid_target_types}', falling back to '${target_type}'")
+            message(WARNING "Target type '${user_defined_target_type}' is ill-formed, "
+                "must be one of '${valid_target_types}', inferring '${target_type}'")
         else ()
             set(target_type "${user_defined_target_type}")
         endif ()
