@@ -11,7 +11,6 @@ set(_UNIGRAPH_UNIT_LIST_DELIMITER "|")
 set(_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER "*")
 
 set_property(GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
-set_property(GLOBAL PROPERTY UNIGRAPH_UNIT_NAME_TO_TARGET_NAME_MAP "")
 
 function(_unigraph_pack_unit_struct
         unit_name
@@ -109,10 +108,6 @@ function(unigraph_unit unit_name)
         set(target_name "${PROJECT_NAME}_${unit_name}")
     endif ()
 
-    set_property(GLOBAL PROPERTY UNIGRAPH_UNIT_NAME_TO_TARGET_NAME_MAP
-            APPEND PROPERTY UNIGRAPH_UNIT_NAME_TO_TARGET_NAME_MAP
-            "${unit_name}:${target_name}")
-
     if (PARSED_ARGS_SOURCES)
         list(TRANSFORM PARSED_ARGS_SOURCES PREPEND "${UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
     endif ()
@@ -154,18 +149,23 @@ function(unigraph_unit unit_name)
     set_property(GLOBAL PROPERTY UNIGRAPH_UNITS_LIST ${unit_list})
 endfunction(unigraph_unit)
 
-function(_unigraph_resolve_target_name unit_name target_name)
-    get_property(unit_name_to_target_name_map GLOBAL PROPERTY UNIGRAPH_UNIT_NAME_TO_TARGET_NAME_MAP)
-    foreach (unit_map_entry IN LISTS unit_name_to_target_name_map)
-        string(REPLACE ":" ";" unit_map_parts ${unit_map_entry})
-        list(GET unit_map_parts 0 mapped_unit_name)
-        list(GET unit_map_parts 1 mapped_target_name)
-        if (${mapped_unit_name} STREQUAL ${unit_name})
-            set(${target_name} ${mapped_target_name} PARENT_SCOPE)
+function(_unigraph_resolve_target_name in_unit_name out_target_name)
+    get_property(unit_list GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
+    foreach (unit IN LISTS unit_list)
+        _unigraph_unpack_unit_struct(${unit}
+                unit_name
+                unit_dir
+                target_name
+                target_type
+                target_sources
+                target_headers
+                target_dependencies)
+        if (in_unit_name STREQUAL unit_name)
+            set(${out_target_name} ${target_name} PARENT_SCOPE)
             return()
         endif ()
     endforeach ()
-    set(${target_name} ${unit_name} PARENT_SCOPE)
+    set(${out_target_name} ${in_unit_name} PARENT_SCOPE)
 endfunction(_unigraph_resolve_target_name)
 
 function(_unigraph_make_unit_targets)
