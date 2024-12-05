@@ -12,6 +12,10 @@ set(_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER "*")
 
 set_property(GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
 
+function(_unigraph_message level message)
+    message(${level} "[ Unigraph ] ${message}")
+endfunction()
+
 # Utility function to convert a set of unit data to a stringified "struct)
 # We need to use different delimiters for internal lists, to maintain parsability
 function(_unigraph_pack_unit_struct
@@ -67,7 +71,7 @@ function(_unigraph_unpack_unit_struct
 
     list(LENGTH unit_list num_elements)
     if (num_elements LESS 7)
-        message(FATAL_ERROR "Malformed packed string: '${packed_str}'")
+        _unigraph_message(FATAL_ERROR "Malformed packed string: '${packed_str}'")
     endif ()
 
     list(GET unit_list 0 unit_name)
@@ -119,7 +123,7 @@ function(_unigraph_make_unit_targets)
                 target_headers
                 target_dependencies)
 
-        message(STATUS "Creating target '${target_name}' of type '${target_type}'")
+        _unigraph_message(STATUS "Creating target '${target_name}' of type '${target_type}'")
         if (target_type STREQUAL "Executable")
             add_executable(${target_name})
             set(header_visibility PRIVATE)
@@ -195,7 +199,7 @@ function(unigraph_unit unit_name)
         set(user_defined_target_type "${PARSED_ARGS_TYPE}")
         list(FIND valid_target_types "${user_defined_target_type}" index)
         if (index EQUAL -1)
-            message(WARNING "Target type '${user_defined_target_type}' is ill-formed, "
+            _unigraph_message(WARNING "Target type '${user_defined_target_type}' is ill-formed, "
                     "must be one of '${valid_target_types}', inferring '${target_type}'")
         else ()
             set(target_type "${user_defined_target_type}")
@@ -237,10 +241,10 @@ function(_unigraph_resolve_target_name in_unit_name out_target_name)
     set(${out_target_name} ${in_unit_name} PARENT_SCOPE)
 endfunction(_unigraph_resolve_target_name)
 
-# Recursively search for all unit.cmake files, and process them
+# Main module entry, recursively search for and include all unit.cmake files, and then process the units
 file(GLOB_RECURSE UNIGRAPH_UNIT_CMAKE_FILES "${CMAKE_CURRENT_LIST_DIR}/**/unit.cmake")
 foreach (file IN LISTS UNIGRAPH_UNIT_CMAKE_FILES)
-    message(STATUS "Found unit.cmake: ${file}")
+    _unigraph_message(STATUS "Found unit.cmake: ${file}")
     get_filename_component(UNIGRAPH_CURRENT_UNIT_DIRECTORY ${file} DIRECTORY)
     include(${file})
 endforeach ()
