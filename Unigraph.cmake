@@ -175,16 +175,16 @@ function(_unigraph_make_unit_targets)
         _unigraph_message(STATUS "Creating target '${target_name}' of type '${target_type}'")
         if (target_type STREQUAL "Executable")
             add_executable(${target_name})
-            set(header_visibility PRIVATE)
+            set(property_visibility PRIVATE)
         elseif (target_type STREQUAL "StaticLibrary")
             add_library(${target_name} STATIC)
-            set(header_visibility PUBLIC)
+            set(property_visibility PUBLIC)
         elseif (target_type STREQUAL "SharedLibrary")
             add_library(${target_name} SHARED)
-            set(header_visibility PUBLIC)
+            set(property_visibility PUBLIC)
         elseif (target_type STREQUAL "Interface")
             add_library(${target_name} INTERFACE)
-            set(header_visibility INTERFACE)
+            set(property_visibility INTERFACE)
         endif ()
 
         target_sources(${target_name}
@@ -193,7 +193,7 @@ function(_unigraph_make_unit_targets)
         )
 
         target_sources(${target_name}
-                ${header_visibility}
+                ${property_visibility}
                 FILE_SET unigraph_${target_name}_headers
                 TYPE HEADERS
                 BASE_DIRS ${unit_dir}
@@ -202,14 +202,9 @@ function(_unigraph_make_unit_targets)
 
         set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE CXX)
 
-        if (target_type STREQUAL "Interface")
-            set(link_visibility INTERFACE)
-        else ()
-            set(link_visibility PUBLIC)
-        endif ()
         foreach (dependency IN LISTS target_dependencies)
             _unigraph_resolve_target_name(${dependency} resolved_dependency)
-            target_link_libraries(${target_name} ${link_visibility} ${resolved_dependency})
+            target_link_libraries(${target_name} ${property_visibility} ${resolved_dependency})
         endforeach ()
 
         # If there are tests sources defined for the unit, create a unit test target
