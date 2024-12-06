@@ -121,6 +121,43 @@ function(_unigraph_unpack_unit_struct
     set(${out_target_test_sources} "${target_test_sources}" PARENT_SCOPE)
 endfunction(_unigraph_unpack_unit_struct)
 
+function(_unigraph_make_unit_target name type base_dir sources headers dependencies)
+    _unigraph_message(STATUS "Creating target '${name}' of type '${type}'")
+    if (type STREQUAL "Executable")
+        add_executable(${target_name})
+        set(property_visibility PRIVATE)
+    elseif (type STREQUAL "StaticLibrary")
+        add_library(${target_name} STATIC)
+        set(property_visibility PUBLIC)
+    elseif (type STREQUAL "SharedLibrary")
+        add_library(${target_name} SHARED)
+        set(property_visibility PUBLIC)
+    elseif (type STREQUAL "Interface")
+        add_library(${target_name} INTERFACE)
+        set(property_visibility INTERFACE)
+    endif ()
+
+    target_sources(${name}
+            PRIVATE
+            ${target_sources}
+    )
+
+    target_sources(${name}
+            ${property_visibility}
+            FILE_SET headers
+            TYPE HEADERS
+            BASE_DIRS ${base_dir}
+            FILES ${headers}
+    )
+
+    set_target_properties(${name} PROPERTIES LINKER_LANGUAGE CXX)
+
+    foreach (dependency IN LISTS dependencies)
+        _unigraph_resolve_target_name(${dependency} resolved_dependency)
+        target_link_libraries(${name} ${property_visibility} ${resolved_dependency})
+    endforeach ()
+endfunction(_unigraph_make_unit_target)
+
 # Utility function to iterate over all user-defined units, and create their cmake targets,
 # resolving dependencies for linkage.
 function(_unigraph_make_unit_targets)
@@ -139,40 +176,7 @@ function(_unigraph_make_unit_targets)
                 target_dependencies
                 target_test_sources)
 
-        _unigraph_message(STATUS "Creating target '${target_name}' of type '${target_type}'")
-        if (target_type STREQUAL "Executable")
-            add_executable(${target_name})
-            set(property_visibility PRIVATE)
-        elseif (target_type STREQUAL "StaticLibrary")
-            add_library(${target_name} STATIC)
-            set(property_visibility PUBLIC)
-        elseif (target_type STREQUAL "SharedLibrary")
-            add_library(${target_name} SHARED)
-            set(property_visibility PUBLIC)
-        elseif (target_type STREQUAL "Interface")
-            add_library(${target_name} INTERFACE)
-            set(property_visibility INTERFACE)
-        endif ()
-
-        target_sources(${target_name}
-                PRIVATE
-                ${target_sources}
-        )
-
-        target_sources(${target_name}
-                ${property_visibility}
-                FILE_SET unigraph_${target_name}_headers
-                TYPE HEADERS
-                BASE_DIRS ${unit_dir}
-                FILES ${target_headers}
-        )
-
-        set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE CXX)
-
-        foreach (dependency IN LISTS target_dependencies)
-            _unigraph_resolve_target_name(${dependency} resolved_dependency)
-            target_link_libraries(${target_name} ${property_visibility} ${resolved_dependency})
-        endforeach ()
+        _unigraph_make_unit_target("${target_name}" "${target_type}" "${unit_dir}" "${target_sources}" "${target_headers}" "${target_dependencies}")
 
         if (target_test_sources)
             _unigraph_create_test_target("${target_name}_Test" ${target_test_sources} ${target_name})
