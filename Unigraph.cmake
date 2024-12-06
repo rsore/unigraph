@@ -322,11 +322,11 @@ function(unigraph_unit unit_name)
     set_property(GLOBAL PROPERTY UNIGRAPH_UNITS_LIST ${unit_list})
 endfunction(unigraph_unit)
 
-function(initialize_google_test)
+function(_unigraph_initialize_google_test)
     _unigraph_message(FATAL_ERROR "Support for GoogleTest not yet implemented")
 endfunction()
 
-function(initialize_catch2)
+function(_unigraph_initialize_catch2)
     FetchContent_Declare(
             Catch2
             GIT_REPOSITORY https://github.com/catchorg/Catch2.git
@@ -336,24 +336,23 @@ function(initialize_catch2)
     set_property(GLOBAL PROPERTY UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN "Catch2::Catch2WithMain")
 endfunction()
 
-function(initialize_test_framework framework)
+function(_unigraph_initialize_test_framework framework)
     list(FIND UNIGRAPH_VALID_TEST_FRAMEWORKS "${framework}" index)
     if (index EQUAL -1)
         _unigraph_message(FATAL_ERROR "Test framework '${framework}' is not supported. Supported frameworks are: ${UNIGRAPH_VALID_TEST_FRAMEWORKS}")
     endif ()
 
     if (framework STREQUAL "GoogleTest")
-        initialize_google_test()
+        _unigraph_initialize_google_test()
     elseif (framework STREQUAL "Catch2")
-        initialize_catch2()
+        _unigraph_initialize_catch2()
     endif ()
     _unigraph_message(STATUS "Using test framework '${framework}'")
-endfunction(initialize_test_framework)
-
+endfunction(_unigraph_initialize_test_framework)
 
 # Main module entry, recursively search for and include all unit.cmake files, and then process the units
 if (UNIGRAPH_TEST_FRAMEWORK)
-    initialize_test_framework("${UNIGRAPH_TEST_FRAMEWORK}")
+    _unigraph_initialize_test_framework("${UNIGRAPH_TEST_FRAMEWORK}")
 endif ()
 
 file(GLOB_RECURSE UNIGRAPH_UNIT_CMAKE_FILES "${CMAKE_CURRENT_LIST_DIR}/**/unit.cmake")
