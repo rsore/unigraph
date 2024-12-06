@@ -89,7 +89,7 @@ function(_unigraph_generate_report)
     _unigraph_append_indent("${json_content}" "${indent}" 1 json_content)
     string(APPEND json_content "\"units\": [\n")
 
-    get_property(unit_list GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
+    get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
     list(LENGTH unit_list unit_list_length)
     set(i 0)
     foreach (unit IN LISTS unit_list)

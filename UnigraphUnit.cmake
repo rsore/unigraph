@@ -1,11 +1,11 @@
 include(CMakeParseArguments)
 
-set(UNIGRAPH_CURRENT_UNIT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}) # Used during unit.cmake parsing
+set(_UNIGRAPH_CURRENT_UNIT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}) # Used during unit.cmake parsing
 
 set(_UNIGRAPH_UNIT_LIST_DELIMITER "|")
 set(_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER "*")
 
-set_property(GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
+set_property(GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
 
 if (NOT UNIGRAPH_TARGET_NAME_PREFIX)
     set(UNIGRAPH_TARGET_NAME_PREFIX "${PROJECT_NAME}")
@@ -127,7 +127,7 @@ function(_unigraph_make_unit_targets)
     set(all_test_sources "")
     set(all_test_dependencies "")
 
-    get_property(unit_list GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
+    get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
     foreach (unit IN LISTS unit_list)
         _unigraph_unpack_unit_struct(${unit}
                 unit_name
@@ -201,7 +201,7 @@ function(_unigraph_make_unit_targets)
 endfunction(_unigraph_make_unit_targets)
 
 function(_unigraph_resolve_target_name in_unit_name out_target_name)
-    get_property(unit_list GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
+    get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
     foreach (unit IN LISTS unit_list)
         _unigraph_unpack_unit_struct(${unit}
                 unit_name
@@ -237,11 +237,11 @@ function(unigraph_unit unit_name)
     endif ()
 
     if (PARSED_ARGS_SOURCES)
-        list(TRANSFORM PARSED_ARGS_SOURCES PREPEND "${UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
+        list(TRANSFORM PARSED_ARGS_SOURCES PREPEND "${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
     endif ()
 
     if (PARSED_ARGS_HEADERS)
-        list(TRANSFORM PARSED_ARGS_HEADERS PREPEND "${UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
+        list(TRANSFORM PARSED_ARGS_HEADERS PREPEND "${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
     endif ()
 
     set(valid_target_types "Executable" "StaticLibrary" "SharedLibrary" "Interface")
@@ -269,12 +269,12 @@ function(unigraph_unit unit_name)
         if (test_framework_target_with_main STREQUAL "")
             _unigraph_message(FATAL_ERROR "TEST_SOURCES defined, but not test framework has been configured. Set variable UNIGRAPH_TEST_FRAMEWORK to one of '${UNIGRAPH_VALID_TEST_FRAMEWORKS}' before including Unigraph")
         endif ()
-        list(TRANSFORM PARSED_ARGS_TEST_SOURCES PREPEND "${UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
+        list(TRANSFORM PARSED_ARGS_TEST_SOURCES PREPEND "${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
     endif ()
 
     _unigraph_pack_unit_struct(
             ${unit_name}
-            ${UNIGRAPH_CURRENT_UNIT_DIRECTORY}
+            ${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}
             ${target_name}
             ${target_type}
             "${PARSED_ARGS_SOURCES}"
@@ -284,7 +284,7 @@ function(unigraph_unit unit_name)
             unit
     )
 
-    get_property(unit_list GLOBAL PROPERTY UNIGRAPH_UNITS_LIST)
+    get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
     list(APPEND unit_list "${unit}")
-    set_property(GLOBAL PROPERTY UNIGRAPH_UNITS_LIST ${unit_list})
+    set_property(GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST ${unit_list})
 endfunction(unigraph_unit)
