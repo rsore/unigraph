@@ -14,15 +14,15 @@ endif ()
 # Utility function to convert a set of unit data to a stringified "struct)
 # We need to use different delimiters for internal lists, to maintain parsability
 function(_unigraph_pack_unit_struct
-        unit_name
-        unit_dir
-        target_name
-        target_type
-        target_sources
-        target_headers
-        target_dependencies
-        target_test_sources
-        out_str)
+    unit_name
+    unit_dir
+    target_name
+    target_type
+    target_sources
+    target_headers
+    target_dependencies
+    target_test_sources
+    out_str)
 
     if (NOT target_sources STREQUAL "")
         string(REPLACE ";" "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" target_sources_packed "${target_sources}")
@@ -49,28 +49,28 @@ function(_unigraph_pack_unit_struct
     endif ()
 
     string(CONCAT packed_str
-            "${unit_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-            "${unit_dir}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-            "${target_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-            "${target_type}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-            "${target_sources_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-            "${target_headers_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-            "${target_dependencies_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-            "${target_test_sources_packed}")
+        "${unit_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+        "${unit_dir}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+        "${target_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+        "${target_type}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+        "${target_sources_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+        "${target_headers_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+        "${target_dependencies_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+        "${target_test_sources_packed}")
     set(${out_str} ${packed_str} PARENT_SCOPE)
 endfunction(_unigraph_pack_unit_struct)
 
 # Utility function to take a stringified unit and extract the different fields
 function(_unigraph_unpack_unit_struct
-        packed_str
-        out_unit_name
-        out_unit_dir
-        out_target_name
-        out_target_type
-        out_target_sources
-        out_target_headers
-        out_target_dependencies
-        out_target_test_sources)
+    packed_str
+    out_unit_name
+    out_unit_dir
+    out_target_name
+    out_target_type
+    out_target_sources
+    out_target_headers
+    out_target_dependencies
+    out_target_test_sources)
     string(REPLACE "${_UNIGRAPH_UNIT_LIST_DELIMITER}" ";" unit_list "${packed_str}")
 
     list(LENGTH unit_list num_elements)
@@ -138,16 +138,16 @@ function(_unigraph_make_unit_target name type base_dir sources headers dependenc
     endif ()
 
     target_sources(${name}
-            PRIVATE
-            ${target_sources}
+        PRIVATE
+        ${target_sources}
     )
 
     target_sources(${name}
-            ${property_visibility}
-            FILE_SET headers
-            TYPE HEADERS
-            BASE_DIRS ${base_dir}
-            FILES ${headers}
+        ${property_visibility}
+        FILE_SET headers
+        TYPE HEADERS
+        BASE_DIRS ${base_dir}
+        FILES ${headers}
     )
 
     set_target_properties(${name} PROPERTIES LINKER_LANGUAGE CXX)
@@ -167,14 +167,14 @@ function(_unigraph_make_unit_targets)
     get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
     foreach (unit IN LISTS unit_list)
         _unigraph_unpack_unit_struct(${unit}
-                unit_name
-                unit_dir
-                target_name
-                target_type
-                target_sources
-                target_headers
-                target_dependencies
-                target_test_sources)
+            unit_name
+            unit_dir
+            target_name
+            target_type
+            target_sources
+            target_headers
+            target_dependencies
+            target_test_sources)
 
         _unigraph_make_unit_target("${target_name}" "${target_type}" "${unit_dir}" "${target_sources}" "${target_headers}" "${target_dependencies}")
 
@@ -194,14 +194,14 @@ function(_unigraph_resolve_target_name in_unit_name out_target_name)
     get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
     foreach (unit IN LISTS unit_list)
         _unigraph_unpack_unit_struct(${unit}
-                unit_name
-                unit_dir
-                target_name
-                target_type
-                target_sources
-                target_headers
-                target_dependencies
-                target_test_sources)
+            unit_name
+            unit_dir
+            target_name
+            target_type
+            target_sources
+            target_headers
+            target_dependencies
+            target_test_sources)
         if (in_unit_name STREQUAL unit_name)
             set(${out_target_name} ${target_name} PARENT_SCOPE)
             return()
@@ -213,11 +213,11 @@ endfunction(_unigraph_resolve_target_name)
 # User-facing function to define a unit
 function(unigraph_unit unit_name)
     cmake_parse_arguments(
-            PARSED_ARGS
-            ""
-            "TYPE"
-            "SOURCES;HEADERS;DEPEND;NAME;TEST_SOURCES"
-            ${ARGN}
+        PARSED_ARGS
+        ""
+        "TYPE"
+        "SOURCES;HEADERS;DEPEND;NAME;TEST_SOURCES"
+        ${ARGN}
     )
 
     if (PARSED_ARGS_NAME)
@@ -245,7 +245,7 @@ function(unigraph_unit unit_name)
         list(FIND valid_target_types "${user_defined_target_type}" index)
         if (index EQUAL -1)
             _unigraph_message(WARNING "Target type '${user_defined_target_type}' is ill-formed, "
-                    "must be one of '${valid_target_types}', inferring '${target_type}'")
+                "must be one of '${valid_target_types}', inferring '${target_type}'")
         else ()
             set(target_type "${user_defined_target_type}")
         endif ()
@@ -263,15 +263,15 @@ function(unigraph_unit unit_name)
     endif ()
 
     _unigraph_pack_unit_struct(
-            ${unit_name}
-            ${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}
-            ${target_name}
-            ${target_type}
-            "${PARSED_ARGS_SOURCES}"
-            "${PARSED_ARGS_HEADERS}"
-            "${PARSED_ARGS_DEPEND}"
-            "${PARSED_ARGS_TEST_SOURCES}"
-            unit
+        ${unit_name}
+        ${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}
+        ${target_name}
+        ${target_type}
+        "${PARSED_ARGS_SOURCES}"
+        "${PARSED_ARGS_HEADERS}"
+        "${PARSED_ARGS_DEPEND}"
+        "${PARSED_ARGS_TEST_SOURCES}"
+        unit
     )
 
     get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)

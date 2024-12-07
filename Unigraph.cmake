@@ -15,10 +15,10 @@
 #                   Expected to be used inside unit.cmake files
 
 macro(_unigraph_message level message)
-    message(${level} "[ Unigraph ] ${message}")
+    message(${level} "[ Unigraph - ${PROJECT_NAME} ] ${message}")
 endmacro()
 
-if (CMAKE_VERSION VERSION_LESS "3.23")
+if (CMAKE_VERSION VERSION_LESS "3.24")
     _unigraph_message(FATAL_ERROR "The module 'Unigraph' requires at least CMake 3.23. Please update your CMake version.")
 endif ()
 
@@ -40,7 +40,7 @@ if (UNIGRAPH_TEST_FRAMEWORK)
     _unigraph_initialize_test_framework("${UNIGRAPH_TEST_FRAMEWORK}")
 endif ()
 
-file(GLOB_RECURSE _UNIGRAPH_UNIT_CMAKE_FILES "${CMAKE_CURRENT_LIST_DIR}/**/unit.cmake")
+file(GLOB_RECURSE _UNIGRAPH_UNIT_CMAKE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/**/unit.cmake")
 foreach (file IN LISTS _UNIGRAPH_UNIT_CMAKE_FILES)
     _unigraph_message(STATUS "Found unit.cmake: ${file}")
     get_filename_component(_UNIGRAPH_CURRENT_UNIT_DIRECTORY ${file} DIRECTORY)

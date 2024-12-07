@@ -4,14 +4,21 @@ set(UNIGRAPH_VALID_TEST_FRAMEWORKS "Catch2" "GoogleTest")
 set_property(GLOBAL PROPERTY _UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN "")
 
 function(_unigraph_initialize_google_test)
-    _unigraph_message(FATAL_ERROR "Support for GoogleTest not yet implemented")
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/b514bdc898e2951020cbdca1304b75f5950d1f59.zip
+    )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+    set_property(GLOBAL PROPERTY _UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN "GTest::gtest_main")
 endfunction()
 
 function(_unigraph_initialize_catch2)
     FetchContent_Declare(
-            Catch2
-            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-            GIT_TAG v3.7.1
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG v3.7.1
     )
     FetchContent_MakeAvailable(Catch2)
     set_property(GLOBAL PROPERTY _UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN "Catch2::Catch2WithMain")

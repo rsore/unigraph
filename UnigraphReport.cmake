@@ -65,7 +65,7 @@ function(_unigraph_list_of_absolute_paths_to_list_of_relative_paths in_list dire
 endfunction(_unigraph_list_of_absolute_paths_to_list_of_relative_paths)
 
 function(_unigraph_generate_report)
-    set(report_path "${CMAKE_BINARY_DIR}/unigraph_report.json")
+    set(report_path "${CMAKE_BINARY_DIR}/unigraph_${PROJECT_NAME}_report.json")
     _unigraph_message(STATUS "Generating unigraph report '${report_path}'")
 
     set(indent "    ")
@@ -119,14 +119,14 @@ function(_unigraph_generate_report)
         endif ()
 
         _unigraph_unpack_unit_struct(${unit}
-                unit_name
-                unit_dir
-                target_name
-                target_type
-                target_sources
-                target_headers
-                target_dependencies
-                target_test_sources)
+            unit_name
+            unit_dir
+            target_name
+            target_type
+            target_sources
+            target_headers
+            target_dependencies
+            target_test_sources)
 
         file(RELATIVE_PATH unit_dir_rel "${PROJECT_SOURCE_DIR}" "${unit_dir}")
 

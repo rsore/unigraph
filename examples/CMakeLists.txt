@@ -1,1 +1,2 @@
 add_subdirectory(math_app)
+add_subdirectory(gtest_test_app)
