@@ -14,14 +14,13 @@
 #  - unigraph_unit: Defines a new unit with a set of sources, headers, and dependencies.
 #                   Expected to be used inside unit.cmake files
 
-if (CMAKE_VERSION VERSION_LESS "3.23")
-    message(FATAL_ERROR "The module 'Unigraph' requires at least CMake 3.23. "
-            "Please update your CMake version.")
-endif ()
-
 macro(_unigraph_message level message)
     message(${level} "[ Unigraph ] ${message}")
 endmacro()
+
+if (CMAKE_VERSION VERSION_LESS "3.23")
+    _unigraph_message(FATAL_ERROR "The module 'Unigraph' requires at least CMake 3.23. Please update your CMake version.")
+endif ()
 
 include(UnigraphUtil)
 include(UnigraphUnit)
@@ -55,4 +54,4 @@ endif ()
 
 if (UNIGRAPH_GENERATE_DEPENDENCY_GRAPH_DOT_FILE)
     _unigraph_generate_dependency_graph_dot_file()
-endif()
+endif ()
