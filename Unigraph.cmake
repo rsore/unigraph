@@ -23,12 +23,18 @@ macro(_unigraph_message level message)
     message(${level} "[ Unigraph ] ${message}")
 endmacro()
 
+include(UnigraphUtil)
 include(UnigraphUnit)
-include(UnigraphReport)
 include(UnigraphTestFramework)
+include(UnigraphReport)
+include(UnigraphViz)
 
 if (NOT DEFINED UNIGRAPH_GENERATE_REPORT)
     set(UNIGRAPH_GENERATE_REPORT ON)
+endif ()
+
+if (NOT DEFINED UNIGRAPH_GENERATE_DEPENDENCY_GRAPH_DOT_FILE)
+    set(UNIGRAPH_GENERATE_DEPENDENCY_GRAPH_DOT_FILE ON)
 endif ()
 
 if (UNIGRAPH_TEST_FRAMEWORK)
@@ -46,3 +52,7 @@ _unigraph_make_unit_targets()
 if (UNIGRAPH_GENERATE_REPORT)
     _unigraph_generate_report()
 endif ()
+
+if (UNIGRAPH_GENERATE_DEPENDENCY_GRAPH_DOT_FILE)
+    _unigraph_generate_dependency_graph_dot_file()
+endif()

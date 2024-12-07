@@ -1,11 +1,3 @@
-function(_unigraph_append_indent in_str indent_key indent_depth out_str)
-    set(output "${in_str}")
-    foreach (i RANGE 1 ${indent_depth})
-        string(APPEND output "${indent_key}")
-    endforeach ()
-    set(${out_str} "${output}" PARENT_SCOPE)
-endfunction(_unigraph_append_indent)
-
 function(_unigraph_json_append_string in_json key indent_key indent_depth value last_key_flag out_json)
     set(output "${in_json}")
     _unigraph_append_indent("${output}" "${indent_key}" ${indent_depth} output)
