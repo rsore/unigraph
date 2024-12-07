@@ -14,7 +14,7 @@ function(_unigraph_generate_dependency_graph_dot_file)
 
     set(executable_attributes "[color=blue]")
     set(library_attributes "[color=green]")
-    set(interface_attributes "[color=gray,style=dashed]")
+    set(interface_attributes "[color=gray16,style=dashed]")
 
     _unigraph_append_line_to_dot("${graph_content}" "subgraph cluster_legend {" "${indent}" 1 graph_content)
     _unigraph_append_line_to_dot("${graph_content}" "label=\"Legend\";" "${indent}" 2 graph_content)
