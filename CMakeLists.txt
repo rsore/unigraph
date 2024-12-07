@@ -3,6 +3,11 @@ project(Unigraph)
 
 option(UNIGRAPH_BUILD_EXAMPLE "Build the example project" ON)
 
-if (UNIGRAPH_BUILD_EXAMPLE)
+option(UNIGRAPH_BUILD_EXAMPLES "description" OFF)
+if (PROJECT_IS_TOP_LEVEL)
+    set(UNIGRAPH_BUILD_EXAMPLES ON CACHE BOOL "" FORCE)
+endif ()
+
+if (UNIGRAPH_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif ()
