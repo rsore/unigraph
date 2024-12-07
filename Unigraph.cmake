@@ -41,6 +41,7 @@ if (UNIGRAPH_TEST_FRAMEWORK)
 endif ()
 
 file(GLOB_RECURSE _UNIGRAPH_UNIT_CMAKE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/**/unit.cmake")
+list(FILTER _UNIGRAPH_UNIT_CMAKE_FILES EXCLUDE REGEX "${CMAKE_BINARY_DIR}/.*")
 foreach (file IN LISTS _UNIGRAPH_UNIT_CMAKE_FILES)
     _unigraph_message(STATUS "Found unit.cmake: ${file}")
     get_filename_component(_UNIGRAPH_CURRENT_UNIT_DIRECTORY ${file} DIRECTORY)

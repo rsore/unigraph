@@ -4,7 +4,6 @@ set(UNIGRAPH_VALID_TEST_FRAMEWORKS "Catch2" "GoogleTest")
 set_property(GLOBAL PROPERTY _UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN "")
 
 function(_unigraph_initialize_google_test)
-    include(FetchContent)
     FetchContent_Declare(
         googletest
         URL https://github.com/google/googletest/archive/b514bdc898e2951020cbdca1304b75f5950d1f59.zip
