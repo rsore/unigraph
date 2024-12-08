@@ -55,15 +55,6 @@ function(_unigraph_json_append_list in_json key indent_key indent_depth list_con
     set(${out_json} "${output}" PARENT_SCOPE)
 endfunction(_unigraph_json_append_list)
 
-function(_unigraph_list_of_absolute_paths_to_list_of_relative_paths in_list directory out_list)
-    set(output)
-    foreach (abs_path IN LISTS in_list)
-        file(RELATIVE_PATH rel_path "${directory}" "${abs_path}")
-        list(APPEND output "${rel_path}")
-    endforeach ()
-    set(${out_list} "${output}" PARENT_SCOPE)
-endfunction(_unigraph_list_of_absolute_paths_to_list_of_relative_paths)
-
 function(_unigraph_generate_report)
     set(report_path "${CMAKE_BINARY_DIR}/unigraph_${PROJECT_NAME}_report.json")
     _unigraph_message(STATUS "Generating unigraph report '${report_path}'")
@@ -125,14 +116,9 @@ function(_unigraph_generate_report)
             target_type
             target_sources
             target_headers
+            target_include_dirs
             target_dependencies
             target_test_sources)
-
-        file(RELATIVE_PATH unit_dir_rel "${PROJECT_SOURCE_DIR}" "${unit_dir}")
-
-        _unigraph_list_of_absolute_paths_to_list_of_relative_paths("${target_headers}" "${unit_dir}" target_headers)
-        _unigraph_list_of_absolute_paths_to_list_of_relative_paths("${target_sources}" "${unit_dir}" target_sources)
-        _unigraph_list_of_absolute_paths_to_list_of_relative_paths("${target_test_sources}" "${unit_dir}" target_test_sources)
 
         _unigraph_append_indent("${json_content}" "${indent}" 3 json_content)
         string(APPEND json_content "{\n")
@@ -140,10 +126,12 @@ function(_unigraph_generate_report)
         _unigraph_json_append_string(${json_content} "name" "${indent}" 4 "${unit_name}" NO json_content)
         _unigraph_json_append_string(${json_content} "target" "${indent}" 4 "${target_name}" NO json_content)
         _unigraph_json_append_string(${json_content} "type" "${indent}" 4 "${target_type}" NO json_content)
-        _unigraph_json_append_string(${json_content} "directory" "${indent}" 4 "${unit_dir_rel}" NO json_content)
+        _unigraph_json_append_string(${json_content} "directory" "${indent}" 4 "${unit_dir}" NO json_content)
         _unigraph_json_append_list(${json_content} "dependencies" "${indent}" 4 target_dependencies NO json_content)
         _unigraph_json_append_list(${json_content} "headers" "${indent}" 4 target_headers NO json_content)
         _unigraph_json_append_list(${json_content} "sources" "${indent}" 4 target_sources NO json_content)
+        message("Unit: ${unit_name}, include_dirs: ( ${target_include_dirs} )")
+        _unigraph_json_append_list(${json_content} "include_dirs" "${indent}" 4 target_include_dirs NO json_content)
         _unigraph_json_append_list(${json_content} "test_sources" "${indent}" 4 target_test_sources YES json_content)
 
         _unigraph_append_indent("${json_content}" "${indent}" 3 json_content)

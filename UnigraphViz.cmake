@@ -56,6 +56,7 @@ function(_unigraph_generate_dependency_graph_dot_file)
             target_type
             target_sources
             target_headers
+            target_include_dirs
             target_dependencies
             target_test_sources)
         if (target_type STREQUAL "Executable")
@@ -79,6 +80,7 @@ function(_unigraph_generate_dependency_graph_dot_file)
             target_type
             target_sources
             target_headers
+            target_include_dirs
             target_dependencies
             target_test_sources)
 

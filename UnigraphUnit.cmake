@@ -20,6 +20,7 @@ function(_unigraph_pack_unit_struct
     target_type
     target_sources
     target_headers
+    target_include_dirs
     target_dependencies
     target_test_sources
     out_str)
@@ -34,6 +35,12 @@ function(_unigraph_pack_unit_struct
         string(REPLACE ";" "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" target_headers_packed "${target_headers}")
     else ()
         set(target_headers_packed "")
+    endif ()
+
+    if (NOT target_include_dirs STREQUAL "")
+        string(REPLACE ";" "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" target_include_dirs_packed "${target_include_dirs}")
+    else ()
+        set(target_include_dirs_packed "")
     endif ()
 
     if (NOT target_dependencies STREQUAL "")
@@ -55,6 +62,7 @@ function(_unigraph_pack_unit_struct
         "${target_type}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
         "${target_sources_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
         "${target_headers_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
+        "${target_include_dirs_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
         "${target_dependencies_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
         "${target_test_sources_packed}")
     set(${out_str} ${packed_str} PARENT_SCOPE)
@@ -69,12 +77,13 @@ function(_unigraph_unpack_unit_struct
     out_target_type
     out_target_sources
     out_target_headers
+    out_target_include_dirs
     out_target_dependencies
     out_target_test_sources)
     string(REPLACE "${_UNIGRAPH_UNIT_LIST_DELIMITER}" ";" unit_list "${packed_str}")
 
     list(LENGTH unit_list num_elements)
-    if (num_elements LESS 7)
+    if (num_elements LESS 8)
         _unigraph_message(FATAL_ERROR "Malformed packed string: '${packed_str}'")
     endif ()
 
@@ -84,8 +93,9 @@ function(_unigraph_unpack_unit_struct
     list(GET unit_list 3 target_type)
     list(GET unit_list 4 sources_packed)
     list(GET unit_list 5 headers_packed)
-    list(GET unit_list 6 dependencies_packed)
-    list(GET unit_list 7 test_sources_packed)
+    list(GET unit_list 6 include_dirs_packed)
+    list(GET unit_list 7 dependencies_packed)
+    list(GET unit_list 8 test_sources_packed)
 
     if (NOT sources_packed STREQUAL "")
         string(REPLACE "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" ";" target_sources "${sources_packed}")
@@ -97,6 +107,12 @@ function(_unigraph_unpack_unit_struct
         string(REPLACE "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" ";" target_headers "${headers_packed}")
     else ()
         set(target_headers "")
+    endif ()
+
+    if (NOT include_dirs_packed STREQUAL "")
+        string(REPLACE "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" ";" target_include_dirs "${include_dirs_packed}")
+    else ()
+        set(target_include_dirs "")
     endif ()
 
     if (NOT dependencies_packed STREQUAL "")
@@ -117,11 +133,12 @@ function(_unigraph_unpack_unit_struct
     set(${out_target_type} "${target_type}" PARENT_SCOPE)
     set(${out_target_sources} "${target_sources}" PARENT_SCOPE)
     set(${out_target_headers} "${target_headers}" PARENT_SCOPE)
+    set(${out_target_include_dirs} "${target_include_dirs}" PARENT_SCOPE)
     set(${out_target_dependencies} "${target_dependencies}" PARENT_SCOPE)
     set(${out_target_test_sources} "${target_test_sources}" PARENT_SCOPE)
 endfunction(_unigraph_unpack_unit_struct)
 
-function(_unigraph_make_unit_target name type base_dir sources headers dependencies)
+function(_unigraph_make_unit_target name type base_dir sources headers include_dirs dependencies)
     _unigraph_message(STATUS "Creating target '${name}' of type '${type}'")
     if (type STREQUAL "Executable")
         add_executable(${target_name})
@@ -140,16 +157,9 @@ function(_unigraph_make_unit_target name type base_dir sources headers dependenc
     target_sources(${name}
         PRIVATE
         ${target_sources}
+        ${target_headers}
     )
-
-    target_sources(${name}
-        ${property_visibility}
-        FILE_SET headers
-        TYPE HEADERS
-        BASE_DIRS ${base_dir}
-        FILES ${headers}
-    )
-
+    target_include_directories(${name} ${property_visibility} ${include_dirs})
     set_target_properties(${name} PROPERTIES LINKER_LANGUAGE CXX)
 
     foreach (dependency IN LISTS dependencies)
@@ -173,10 +183,11 @@ function(_unigraph_make_unit_targets)
             target_type
             target_sources
             target_headers
+            target_include_dirs
             target_dependencies
             target_test_sources)
 
-        _unigraph_make_unit_target("${target_name}" "${target_type}" "${unit_dir}" "${target_sources}" "${target_headers}" "${target_dependencies}")
+        _unigraph_make_unit_target("${target_name}" "${target_type}" "${unit_dir}" "${target_sources}" "${target_headers}" "${target_include_dirs}" "${target_dependencies}")
 
         if (target_test_sources)
             _unigraph_create_test_target("${target_name}_Test" ${target_test_sources} ${target_name})
@@ -200,6 +211,7 @@ function(_unigraph_resolve_target_name in_unit_name out_target_name)
             target_type
             target_sources
             target_headers
+            target_include_dirs
             target_dependencies
             target_test_sources)
         if (in_unit_name STREQUAL unit_name)
@@ -216,7 +228,7 @@ function(unigraph_unit unit_name)
         PARSED_ARGS
         ""
         "TYPE"
-        "SOURCES;HEADERS;DEPEND;NAME;TEST_SOURCES"
+        "SOURCES;HEADERS;DEPEND;NAME;INCLUDE_DIRS;TEST_SOURCES"
         ${ARGN}
     )
 
@@ -233,6 +245,13 @@ function(unigraph_unit unit_name)
     if (PARSED_ARGS_HEADERS)
         list(TRANSFORM PARSED_ARGS_HEADERS PREPEND "${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
     endif ()
+
+    if (PARSED_ARGS_INCLUDE_DIRS)
+        list(TRANSFORM PARSED_ARGS_INCLUDE_DIRS PREPEND "${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
+        set(include_dirs "${PARSED_ARGS_INCLUDE_DIRS}")
+    else()
+        set(include_dirs "${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}")
+    endif()
 
     set(valid_target_types "Executable" "StaticLibrary" "SharedLibrary" "Interface")
     set(target_type "StaticLibrary")
@@ -269,6 +288,7 @@ function(unigraph_unit unit_name)
         ${target_type}
         "${PARSED_ARGS_SOURCES}"
         "${PARSED_ARGS_HEADERS}"
+        "${include_dirs}"
         "${PARSED_ARGS_DEPEND}"
         "${PARSED_ARGS_TEST_SOURCES}"
         unit
