@@ -130,7 +130,6 @@ function(_unigraph_generate_report)
         _unigraph_json_append_list(${json_content} "dependencies" "${indent}" 4 target_dependencies NO json_content)
         _unigraph_json_append_list(${json_content} "headers" "${indent}" 4 target_headers NO json_content)
         _unigraph_json_append_list(${json_content} "sources" "${indent}" 4 target_sources NO json_content)
-        message("Unit: ${unit_name}, include_dirs: ( ${target_include_dirs} )")
         _unigraph_json_append_list(${json_content} "include_dirs" "${indent}" 4 target_include_dirs NO json_content)
         _unigraph_json_append_list(${json_content} "test_sources" "${indent}" 4 target_test_sources YES json_content)
 
