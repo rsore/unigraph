@@ -23,6 +23,7 @@ if (CMAKE_VERSION VERSION_LESS "3.24")
 endif ()
 
 include(UnigraphUtil)
+include(UnigraphDictionary)
 include(UnigraphTestFramework)
 include(UnigraphUnit)
 include(UnigraphReport)

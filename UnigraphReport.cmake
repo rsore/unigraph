@@ -16,6 +16,8 @@ function(_unigraph_json_append_list in_json key indent_key indent_depth list_con
     set(output "${in_json}")
     _unigraph_append_indent("${output}" "${indent_key}" ${indent_depth} output)
 
+
+    list(FILTER ${list_content_var} EXCLUDE REGEX "^\"\"$")
     list(LENGTH ${list_content_var} list_length)
     if (list_length EQUAL 0)
         string(APPEND output "\"${key}\": []")
@@ -109,16 +111,16 @@ function(_unigraph_generate_report)
             set(last_unit NO)
         endif ()
 
-        _unigraph_unpack_unit_struct(${unit}
-            unit_name
-            unit_dir
-            target_name
-            target_type
-            target_sources
-            target_headers
-            target_include_dirs
-            target_dependencies
-            target_test_sources)
+        _unigraph_dict_from_list_compatible(unit)
+        _unigraph_get_value_from_dict(STRING unit "name" unit_name)
+        _unigraph_get_value_from_dict(STRING unit "type" target_type)
+        _unigraph_get_value_from_dict(STRING unit "target_name" target_name)
+        _unigraph_get_value_from_dict(STRING unit "directory" unit_dir)
+        _unigraph_get_value_from_dict(LIST unit "include_dirs" target_include_dirs)
+        _unigraph_get_value_from_dict(LIST unit "headers" target_headers)
+        _unigraph_get_value_from_dict(LIST unit "sources" target_sources)
+        _unigraph_get_value_from_dict(LIST unit "test_sources" target_test_sources)
+        _unigraph_get_value_from_dict(LIST unit "dependencies" target_dependencies)
 
         _unigraph_append_indent("${json_content}" "${indent}" 3 json_content)
         string(APPEND json_content "{\n")
