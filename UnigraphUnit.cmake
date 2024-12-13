@@ -68,7 +68,7 @@ function(_unigraph_make_unit_targets)
         _unigraph_make_unit_target("${target_name}" "${target_type}" "${unit_dir}" "${target_sources}" "${target_headers}" "${target_include_dirs}" "${target_dependencies}")
 
         if (target_test_sources)
-            _unigraph_create_test_target("${target_name}_Test" ${target_test_sources} ${target_name})
+            _unigraph_create_test_target("${target_name}_Test" "${target_test_sources}" "${target_name}")
             list(APPEND all_test_sources ${target_test_sources})
             list(APPEND all_test_dependencies ${target_name})
         endif ()
