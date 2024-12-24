@@ -11,133 +11,6 @@ if (NOT UNIGRAPH_TARGET_NAME_PREFIX)
     set(UNIGRAPH_TARGET_NAME_PREFIX "${PROJECT_NAME}")
 endif ()
 
-# Utility function to convert a set of unit data to a stringified "struct)
-# We need to use different delimiters for internal lists, to maintain parsability
-function(_unigraph_pack_unit_struct
-    unit_name
-    unit_dir
-    target_name
-    target_type
-    target_sources
-    target_headers
-    target_include_dirs
-    target_dependencies
-    target_test_sources
-    out_str)
-
-    if (NOT target_sources STREQUAL "")
-        string(REPLACE ";" "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" target_sources_packed "${target_sources}")
-    else ()
-        set(target_sources_packed "")
-    endif ()
-
-    if (NOT target_headers STREQUAL "")
-        string(REPLACE ";" "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" target_headers_packed "${target_headers}")
-    else ()
-        set(target_headers_packed "")
-    endif ()
-
-    if (NOT target_include_dirs STREQUAL "")
-        string(REPLACE ";" "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" target_include_dirs_packed "${target_include_dirs}")
-    else ()
-        set(target_include_dirs_packed "")
-    endif ()
-
-    if (NOT target_dependencies STREQUAL "")
-        string(REPLACE ";" "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" target_dependencies_packed "${target_dependencies}")
-    else ()
-        set(target_dependencies_packed "")
-    endif ()
-
-    if (NOT target_test_sources STREQUAL "")
-        string(REPLACE ";" "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" target_test_sources_packed "${target_test_sources}")
-    else ()
-        set(target_test_sources_packed "")
-    endif ()
-
-    string(CONCAT packed_str
-        "${unit_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-        "${unit_dir}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-        "${target_name}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-        "${target_type}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-        "${target_sources_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-        "${target_headers_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-        "${target_include_dirs_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-        "${target_dependencies_packed}${_UNIGRAPH_UNIT_LIST_DELIMITER}"
-        "${target_test_sources_packed}")
-    set(${out_str} ${packed_str} PARENT_SCOPE)
-endfunction(_unigraph_pack_unit_struct)
-
-# Utility function to take a stringified unit and extract the different fields
-function(_unigraph_unpack_unit_struct
-    packed_str
-    out_unit_name
-    out_unit_dir
-    out_target_name
-    out_target_type
-    out_target_sources
-    out_target_headers
-    out_target_include_dirs
-    out_target_dependencies
-    out_target_test_sources)
-    string(REPLACE "${_UNIGRAPH_UNIT_LIST_DELIMITER}" ";" unit_list "${packed_str}")
-
-    list(LENGTH unit_list num_elements)
-    if (num_elements LESS 8)
-        _unigraph_message(FATAL_ERROR "Malformed packed string: '${packed_str}'")
-    endif ()
-
-    list(GET unit_list 0 unit_name)
-    list(GET unit_list 1 unit_dir)
-    list(GET unit_list 2 target_name)
-    list(GET unit_list 3 target_type)
-    list(GET unit_list 4 sources_packed)
-    list(GET unit_list 5 headers_packed)
-    list(GET unit_list 6 include_dirs_packed)
-    list(GET unit_list 7 dependencies_packed)
-    list(GET unit_list 8 test_sources_packed)
-
-    if (NOT sources_packed STREQUAL "")
-        string(REPLACE "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" ";" target_sources "${sources_packed}")
-    else ()
-        set(target_sources "")
-    endif ()
-
-    if (NOT headers_packed STREQUAL "")
-        string(REPLACE "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" ";" target_headers "${headers_packed}")
-    else ()
-        set(target_headers "")
-    endif ()
-
-    if (NOT include_dirs_packed STREQUAL "")
-        string(REPLACE "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" ";" target_include_dirs "${include_dirs_packed}")
-    else ()
-        set(target_include_dirs "")
-    endif ()
-
-    if (NOT dependencies_packed STREQUAL "")
-        string(REPLACE "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" ";" target_dependencies "${dependencies_packed}")
-    else ()
-        set(target_dependencies "")
-    endif ()
-
-    if (NOT test_sources_packed STREQUAL "")
-        string(REPLACE "${_UNIGRAPH_UNIT_PROPERTY_LIST_DELIMITER}" ";" target_test_sources "${test_sources_packed}")
-    else ()
-        set(target_test_sources "")
-    endif ()
-
-    set(${out_unit_name} "${unit_name}" PARENT_SCOPE)
-    set(${out_unit_dir} "${unit_dir}" PARENT_SCOPE)
-    set(${out_target_name} "${target_name}" PARENT_SCOPE)
-    set(${out_target_type} "${target_type}" PARENT_SCOPE)
-    set(${out_target_sources} "${target_sources}" PARENT_SCOPE)
-    set(${out_target_headers} "${target_headers}" PARENT_SCOPE)
-    set(${out_target_include_dirs} "${target_include_dirs}" PARENT_SCOPE)
-    set(${out_target_dependencies} "${target_dependencies}" PARENT_SCOPE)
-    set(${out_target_test_sources} "${target_test_sources}" PARENT_SCOPE)
-endfunction(_unigraph_unpack_unit_struct)
-
 function(_unigraph_make_unit_target name type base_dir sources headers include_dirs dependencies)
     _unigraph_message(STATUS "Creating target '${name}' of type '${type}'")
     if (type STREQUAL "Executable")
@@ -176,21 +49,26 @@ function(_unigraph_make_unit_targets)
 
     get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
     foreach (unit IN LISTS unit_list)
-        _unigraph_unpack_unit_struct(${unit}
-            unit_name
-            unit_dir
-            target_name
-            target_type
-            target_sources
-            target_headers
-            target_include_dirs
-            target_dependencies
-            target_test_sources)
+        _unigraph_dict_from_list_compatible(unit)
+        _unigraph_get_value_from_dict(STRING unit "target_name" target_name)
+        _unigraph_get_value_from_dict(STRING unit "type" target_type)
+        _unigraph_get_value_from_dict(STRING unit "directory" unit_dir)
+        _unigraph_get_value_from_dict(LIST unit "sources" target_sources)
+        _unigraph_get_value_from_dict(LIST unit "headers" target_headers)
+        _unigraph_get_value_from_dict(LIST unit "include_dirs" target_include_dirs)
+        _unigraph_get_value_from_dict(LIST unit "dependencies" target_dependencies)
+        _unigraph_get_value_from_dict(LIST unit "test_sources" target_test_sources)
+
+        list(FILTER target_sources EXCLUDE REGEX "^\"\"$")
+        list(FILTER target_headers EXCLUDE REGEX "^\"\"$")
+        list(FILTER target_include_dirs EXCLUDE REGEX "^\"\"$")
+        list(FILTER target_dependencies EXCLUDE REGEX "^\"\"$")
+        list(FILTER target_test_sources EXCLUDE REGEX "^\"\"$")
 
         _unigraph_make_unit_target("${target_name}" "${target_type}" "${unit_dir}" "${target_sources}" "${target_headers}" "${target_include_dirs}" "${target_dependencies}")
 
         if (target_test_sources)
-            _unigraph_create_test_target("${target_name}_Test" ${target_test_sources} ${target_name})
+            _unigraph_create_test_target("${target_name}_Test" "${target_test_sources}" "${target_name}")
             list(APPEND all_test_sources ${target_test_sources})
             list(APPEND all_test_dependencies ${target_name})
         endif ()
@@ -204,16 +82,9 @@ endfunction(_unigraph_make_unit_targets)
 function(_unigraph_resolve_target_name in_unit_name out_target_name)
     get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
     foreach (unit IN LISTS unit_list)
-        _unigraph_unpack_unit_struct(${unit}
-            unit_name
-            unit_dir
-            target_name
-            target_type
-            target_sources
-            target_headers
-            target_include_dirs
-            target_dependencies
-            target_test_sources)
+        _unigraph_dict_from_list_compatible(unit)
+        _unigraph_get_value_from_dict(STRING unit "name" unit_name)
+        _unigraph_get_value_from_dict(STRING unit "target_name" target_name)
         if (in_unit_name STREQUAL unit_name)
             set(${out_target_name} ${target_name} PARENT_SCOPE)
             return()
@@ -258,7 +129,7 @@ function(unigraph_unit unit_name)
         endforeach ()
     else ()
         set(include_dirs "${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}")
-    endif ()
+    endif()
 
     set(valid_target_types "Executable" "StaticLibrary" "SharedLibrary" "Interface")
     set(target_type "StaticLibrary")
@@ -288,20 +159,19 @@ function(unigraph_unit unit_name)
         list(TRANSFORM PARSED_ARGS_TEST_SOURCES PREPEND "${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}/")
     endif ()
 
-    _unigraph_pack_unit_struct(
-        ${unit_name}
-        ${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}
-        ${target_name}
-        ${target_type}
-        "${PARSED_ARGS_SOURCES}"
-        "${PARSED_ARGS_HEADERS}"
-        "${include_dirs}"
-        "${PARSED_ARGS_DEPEND}"
-        "${PARSED_ARGS_TEST_SOURCES}"
-        unit
-    )
+    set(unit)
+    _unigraph_set_value_to_dict(STRING unit "name" "${unit_name}")
+    _unigraph_set_value_to_dict(STRING unit "type" "${target_type}")
+    _unigraph_set_value_to_dict(STRING unit "target_name" "${target_name}")
+    _unigraph_set_value_to_dict(STRING unit "directory" "${_UNIGRAPH_CURRENT_UNIT_DIRECTORY}")
+    _unigraph_set_value_to_dict(LIST unit "include_dirs" "${include_dirs}")
+    _unigraph_set_value_to_dict(LIST unit "headers" "${PARSED_ARGS_HEADERS}")
+    _unigraph_set_value_to_dict(LIST unit "sources" "${PARSED_ARGS_SOURCES}")
+    _unigraph_set_value_to_dict(LIST unit "test_sources" "${PARSED_ARGS_TEST_SOURCES}")
+    _unigraph_set_value_to_dict(LIST unit "dependencies" "${PARSED_ARGS_DEPEND}")
 
     get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
+    _unigraph_dict_to_list_compatible(unit)
     list(APPEND unit_list "${unit}")
     set_property(GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST ${unit_list})
 endfunction(unigraph_unit)

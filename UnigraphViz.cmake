@@ -49,16 +49,10 @@ function(_unigraph_generate_dependency_graph_dot_file)
     _unigraph_append_line_to_dot("${graph_content}" "node [penwidth=2];" "${indent}" 1 graph_content)
     get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
     foreach (unit IN LISTS unit_list)
-        _unigraph_unpack_unit_struct(${unit}
-            unit_name
-            unit_dir
-            target_name
-            target_type
-            target_sources
-            target_headers
-            target_include_dirs
-            target_dependencies
-            target_test_sources)
+        _unigraph_dict_from_list_compatible(unit)
+        _unigraph_get_value_from_dict(STRING unit "name" unit_name)
+        _unigraph_get_value_from_dict(STRING unit "type" target_type)
+
         if (target_type STREQUAL "Executable")
             set(label_properties "${executable_attributes}")
         elseif (target_type STREQUAL "StaticLibrary")
@@ -73,17 +67,11 @@ function(_unigraph_generate_dependency_graph_dot_file)
     endforeach ()
 
     foreach (unit IN LISTS unit_list)
-        _unigraph_unpack_unit_struct(${unit}
-            unit_name
-            unit_dir
-            target_name
-            target_type
-            target_sources
-            target_headers
-            target_include_dirs
-            target_dependencies
-            target_test_sources)
+        _unigraph_dict_from_list_compatible(unit)
+        _unigraph_get_value_from_dict(STRING unit "name" unit_name)
+        _unigraph_get_value_from_dict(LIST unit "dependencies" target_dependencies)
 
+        list(FILTER target_dependencies EXCLUDE REGEX "^\"\"$")
         foreach (dependency IN LISTS target_dependencies)
             _unigraph_append_line_to_dot("${graph_content}" "${unit_name} -> ${dependency};" "${indent}" 1 graph_content)
         endforeach ()
