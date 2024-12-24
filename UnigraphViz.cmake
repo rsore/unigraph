@@ -73,7 +73,7 @@ function(_unigraph_generate_dependency_graph_dot_file)
 
         list(FILTER target_dependencies EXCLUDE REGEX "^\"\"$")
         foreach (dependency IN LISTS target_dependencies)
-            _unigraph_append_line_to_dot("${graph_content}" "${unit_name} -> ${dependency};" "${indent}" 1 graph_content)
+            _unigraph_append_line_to_dot("${graph_content}" "\"${unit_name}\" -> \"${dependency}\";" "${indent}" 1 graph_content)
         endforeach ()
     endforeach ()
 
