@@ -1,0 +1,11 @@
+unigraph_unit(Threading
+  HEADERS
+    thread_name.hpp
+    PLATFORM_SOURCES
+    :windows
+      windows/thread_name.cpp
+    :linux
+      linux/thread_name.cpp
+    :darwin
+      linux/thread_name.cpp
+)
