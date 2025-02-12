@@ -130,8 +130,8 @@ function(unigraph_unit unit_name)
     cmake_parse_arguments(
         PARSED_ARGS
         ""
-        "TYPE"
-        "SOURCES;HEADERS;DEPEND;NAME;INCLUDE_DIRS;TEST_SOURCES;NOLINK_DEPEND"
+        "NAME;TYPE"
+        "SOURCES;HEADERS;DEPEND;INCLUDE_DIRS;TEST_SOURCES;NOLINK_DEPEND"
         ${ARGN}
     )
 
