@@ -1,4 +1,4 @@
-#include <thread>
+#include <thread.hpp>
 #include <thread_name.hpp>
 
 #include <iostream>
@@ -6,18 +6,19 @@
 int
 main()
 {
-    set_thread_name("main_thread");
+    initialize_thread_naming();
 
-    std::cout << "Thread name: " << get_thread_name() << std::endl;
+    set_current_thread_name("main");
 
-    std::thread t([]
+    std::cout << "Thread name: " << get_current_thread_name() << std::endl;
+
+    Thread t("worker", []
     {
-        set_thread_name("other_thread");
-        std::cout << "Thread name: " << get_thread_name() << std::endl;
+        std::cout << "Thread name: " << get_current_thread_name() << std::endl;
     });
     t.join();
 
-    std::cout << "Thread name: " << get_thread_name() << std::endl;
+    std::cout << "Thread name: " << get_current_thread_name() << std::endl;
 
     return 0;
 }

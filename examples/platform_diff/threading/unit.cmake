@@ -1,11 +1,12 @@
 unigraph_unit(Threading
   HEADERS
+    scoped_thread.hpp
+    thread.hpp
     thread_name.hpp
-    PLATFORM_SOURCES
+  SOURCES
+    thread_name.cpp
     :windows
-      windows/thread_name.cpp
-    :linux
-      linux/thread_name.cpp
-    :darwin
-      linux/thread_name.cpp
+      windows/win32_thread_name.cpp
+    :darwin:linux
+      unix/pthread_thread_name.cpp
 )

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
-void set_thread_name(std::string);
-std::string get_thread_name();
+void initialize_thread_naming();
+void set_current_thread_name(std::string_view);
+[[nodiscard]] std::string get_current_thread_name();
