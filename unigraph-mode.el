@@ -20,7 +20,10 @@
   :syntax-table nil ;; Inherit the syntax table of cmake-mode
   (setq-local font-lock-defaults '(unigraph-font-lock-keywords)))
 
-;; Automatically enable unigraph-mode for unit.cmake files
-(add-to-list 'auto-mode-alist '("unit\\.cmake\\'" . unigraph-mode))
+(defun unigraph-mode-maybe ()
+  "Activate `unigraph-mode` for unit.cmake files."
+  (when (string= (file-name-nondirectory buffer-file-name) "unit.cmake")
+    (unigraph-mode)))
+(add-hook 'find-file-hook 'unigraph-mode-maybe)
 
 (provide 'unigraph-mode)
