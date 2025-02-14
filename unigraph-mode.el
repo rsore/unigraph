@@ -2,7 +2,7 @@
 
 (defun unigraph-keywords ()
   '("NAME" "TYPE" "SOURCES" "HEADERS" "DEPEND" "INCLUDE_DIRS"
-    "TEST_SOURCES" "NOLINK_DEPEND"))
+    "TEST_SOURCES" "NOLINK_DEPEND" "PROPERTIES"))
 
 (defun unigraph-font-lock-keywords ()
   (list
