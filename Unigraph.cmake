@@ -37,23 +37,36 @@ if (NOT DEFINED UNIGRAPH_GENERATE_DEPENDENCY_GRAPH_DOT_FILE)
     set(UNIGRAPH_GENERATE_DEPENDENCY_GRAPH_DOT_FILE ON)
 endif ()
 
-if (UNIGRAPH_TEST_FRAMEWORK)
-    _unigraph_initialize_test_framework("${UNIGRAPH_TEST_FRAMEWORK}")
-endif ()
+function(unigraph_init)
+    cmake_parse_arguments(
+        arg
+        "GENERATE_REPORT;GENERATE_DEPENDENCY_GRAPH"
+        "TEST_FRAMEWORK"
+        "UNITS"
+        ${ARGN}
+    )
 
-file(GLOB_RECURSE _UNIGRAPH_UNIT_CMAKE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/**/unit.cmake")
-list(FILTER _UNIGRAPH_UNIT_CMAKE_FILES EXCLUDE REGEX "${CMAKE_BINARY_DIR}/.*")
-foreach (file IN LISTS _UNIGRAPH_UNIT_CMAKE_FILES)
-    _unigraph_message(STATUS "Found unit.cmake: ${file}")
-    get_filename_component(_UNIGRAPH_CURRENT_UNIT_DIRECTORY ${file} DIRECTORY)
-    include(${file})
-endforeach ()
-_unigraph_make_unit_targets()
+    if (arg_TEST_FRAMEWORK)
+        _unigraph_initialize_test_framework("${arg_TEST_FRAMEWORK}")
+    endif ()
 
-if (UNIGRAPH_GENERATE_REPORT)
-    _unigraph_generate_report()
-endif ()
+    foreach (unit_path IN LISTS arg_UNITS)
+        set (unit_file "${CMAKE_CURRENT_SOURCE_DIR}/${unit_path}/unit.cmake")
+        if (NOT EXISTS "${unit_file}")
+            _unigraph_message(FATAL_ERROR "Expected to find unit file \"${unit_file}\", but it does not exist")
+        endif ()
 
-if (UNIGRAPH_GENERATE_DEPENDENCY_GRAPH_DOT_FILE)
-    _unigraph_generate_dependency_graph_dot_file()
-endif ()
+        _unigraph_message(STATUS "Processing unit file \"${unit_file}\"...")
+        get_filename_component(_UNIGRAPH_CURRENT_UNIT_DIRECTORY "${unit_file}" DIRECTORY) # Used by Unigraph while parsing units
+        include("${unit_file}")
+    endforeach ()
+    _unigraph_make_unit_targets()
+
+    if (arg_GENERATE_REPORT)
+        _unigraph_generate_report()
+    endif ()
+
+    if (arg_GENERATE_DEPENDENCY_GRAPH)
+        _unigraph_generate_dependency_graph_dot_file()
+    endif ()
+endfunction(unigraph_init)
