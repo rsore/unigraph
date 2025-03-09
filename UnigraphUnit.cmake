@@ -11,7 +11,7 @@ if (NOT UNIGRAPH_TARGET_NAME_PREFIX)
     set(UNIGRAPH_TARGET_NAME_PREFIX "${PROJECT_NAME}")
 endif ()
 
-function(_unigraph_make_unit_target name type base_dir sources headers include_dirs dependencies nolink_dependencies properties)
+function(_unigraph_make_unit_target name type base_dir sources headers include_dirs dependencies nolink_dependencies properties definitions)
     _unigraph_message(STATUS "Creating target '${name}' of type '${type}'")
     if (type STREQUAL "Executable")
         add_executable(${target_name})
@@ -34,6 +34,10 @@ function(_unigraph_make_unit_target name type base_dir sources headers include_d
     )
     target_include_directories(${name} ${property_visibility} ${include_dirs})
     set_target_properties(${name} PROPERTIES LINKER_LANGUAGE CXX)
+
+    if (definitions)
+        target_compile_definitions(${name} ${property_visibility} ${definitions})
+    endif ()
 
     foreach (property IN LISTS properties)
       if (property MATCHES "^([^=]+)=(.*)$")
@@ -74,6 +78,7 @@ function(_unigraph_make_unit_targets)
         _unigraph_get_value_from_dict(LIST unit "nolink_dependencies" target_nolink_dependencies)
         _unigraph_get_value_from_dict(LIST unit "test_sources" target_test_sources)
         _unigraph_get_value_from_dict(LIST unit "properties" target_properties)
+        _unigraph_get_value_from_dict(LIST unit "definitions" target_definitions)
 
         list(FILTER target_sources EXCLUDE REGEX "^\"\"$")
         list(FILTER target_headers EXCLUDE REGEX "^\"\"$")
@@ -82,8 +87,9 @@ function(_unigraph_make_unit_targets)
         list(FILTER target_nolink_dependencies EXCLUDE REGEX "^\"\"$")
         list(FILTER target_test_sources EXCLUDE REGEX "^\"\"$")
         list(FILTER target_properties EXCLUDE REGEX "^\"\"$")
+        list(FILTER target_definitions EXCLUDE REGEX "^\"\"$")
 
-        _unigraph_make_unit_target("${target_name}" "${target_type}" "${unit_dir}" "${target_sources}" "${target_headers}" "${target_include_dirs}" "${target_dependencies}" "${target_nolink_dependencies}" "${target_properties}")
+        _unigraph_make_unit_target("${target_name}" "${target_type}" "${unit_dir}" "${target_sources}" "${target_headers}" "${target_include_dirs}" "${target_dependencies}" "${target_nolink_dependencies}" "${target_properties}" "${target_definitions}")
 
         if (target_test_sources)
             _unigraph_create_test_target("${target_name}_Test" "${target_test_sources}" "${target_name}")
@@ -143,7 +149,7 @@ function(unigraph_unit unit_name)
         PARSED_ARGS
         ""
         "NAME;TYPE"
-        "SOURCES;HEADERS;DEPEND;INCLUDE_DIRS;TEST_SOURCES;NOLINK_DEPEND;PROPERTIES"
+        "SOURCES;HEADERS;DEPEND;INCLUDE_DIRS;TEST_SOURCES;NOLINK_DEPEND;PROPERTIES;DEFINITIONS"
         ${ARGN}
     )
 
@@ -180,6 +186,10 @@ function(unigraph_unit unit_name)
 
     if (PARSED_ARGS_PROPERTIES)
       _process_platform_annotations(PARSED_ARGS_PROPERTIES)
+    endif ()
+
+    if (PARSED_ARGS_DEFINITIONS)
+      _process_platform_annotations(PARSED_ARGS_DEFINITIONS)
     endif ()
 
     set(valid_target_types "Executable" "StaticLibrary" "SharedLibrary" "Interface")
@@ -224,6 +234,7 @@ function(unigraph_unit unit_name)
     _unigraph_set_value_to_dict(LIST unit "dependencies" "${PARSED_ARGS_DEPEND}")
     _unigraph_set_value_to_dict(LIST unit "nolink_dependencies" "${PARSED_ARGS_NOLINK_DEPEND}")
     _unigraph_set_value_to_dict(LIST unit "properties" "${PARSED_ARGS_PROPERTIES}")
+    _unigraph_set_value_to_dict(LIST unit "definitions" "${PARSED_ARGS_DEFINITIONS}")
 
     get_property(unit_list GLOBAL PROPERTY _UNIGRAPH_UNITS_LIST)
     _unigraph_dict_to_list_compatible(unit)
