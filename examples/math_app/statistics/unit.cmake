@@ -1,4 +1,4 @@
-unigraph_unit(Statistics
+unigraph_unit(
     DEPEND MathTypes
     HEADERS statistics.hpp
     SOURCES statistics.cpp

@@ -9,9 +9,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../..")
 include(Unigraph)
 
 unigraph_init(
-    GENERATE_REPORT
-    GENERATE_DEPENDENCY_GRAPH
-    TEST_FRAMEWORK GoogleTest
+    GENERATE_REPORT           ON
+    GENERATE_DEPENDENCY_GRAPH ON
+    TEST_FRAMEWORK            GoogleTest
+
     UNITS
-      hello_gtest/
+      HelloGTest hello_gtest/
 )

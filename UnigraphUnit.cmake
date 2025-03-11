@@ -144,7 +144,7 @@ function(_process_platform_annotations list_name)
 endfunction(_process_platform_annotations)
 
 # User-facing function to define a unit
-function(unigraph_unit unit_name)
+function(unigraph_unit)
     cmake_parse_arguments(
         PARSED_ARGS
         ""
@@ -152,6 +152,8 @@ function(unigraph_unit unit_name)
         "SOURCES;HEADERS;DEPEND;INCLUDE_DIRS;TEST_SOURCES;NOLINK_DEPEND;PROPERTIES;DEFINITIONS"
         ${ARGN}
     )
+
+    set(unit_name "${_UNIGRAPH_CURRENT_UNIT_NAME}")
 
     if (PARSED_ARGS_NAME)
         set(target_name "${PARSED_ARGS_NAME}")

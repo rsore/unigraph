@@ -9,14 +9,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../..")
 include(Unigraph)
 
 unigraph_init(
-  GENERATE_REPORT
-  GENERATE_DEPENDENCY_GRAPH
-  TEST_FRAMEWORK Catch2
+  GENERATE_REPORT           ON
+  GENERATE_DEPENDENCY_GRAPH ON
+  TEST_FRAMEWORK            Catch2
+
   UNITS
-    algorithms/
-    geometry/
-    main_entry/
-    math_constants/
-    math_types/
-    statistics/
+    Algorithms    algorithms/
+    Geometry      geometry/
+    MainEntry     main_entry/
+    MathConstants math_constants/
+    MathTypes     math_types/
+    Statistics    statistics/
 )

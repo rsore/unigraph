@@ -1,4 +1,4 @@
-unigraph_unit(Algorithms
+unigraph_unit(
     DEPEND MathTypes
     HEADERS algorithms.hpp
     SOURCES algorithms.cpp

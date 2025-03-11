@@ -40,33 +40,48 @@ endif ()
 function(unigraph_init)
     cmake_parse_arguments(
         arg
-        "GENERATE_REPORT;GENERATE_DEPENDENCY_GRAPH"
-        "TEST_FRAMEWORK"
+        ""
+        "TEST_FRAMEWORK;GENERATE_REPORT;GENERATE_DEPENDENCY_GRAPH"
         "UNITS"
         ${ARGN}
     )
+
+    list(LENGTH arg_UNITS unit_count)
+    math(EXPR unit_count_mod_two "${unit_count} % 2")
+    if (NOT ${unit_count_mod_two} STREQUAL "0")
+        _unigraph_message(FATAL_ERROR "In function 'unigraph_init': Keyword 'UNITS' must have an even number of arguments (name/path pairs).")
+    endif ()
 
     if (arg_TEST_FRAMEWORK)
         _unigraph_initialize_test_framework("${arg_TEST_FRAMEWORK}")
     endif ()
 
-    foreach (unit_path IN LISTS arg_UNITS)
+    math(EXPR unit_count_minus_one "${unit_count} - 1")
+    foreach(i RANGE 0 ${unit_count_minus_one} 2)
+        math(EXPR i_plus_one "${i} + 1")
+        list(GET arg_UNITS ${i} unit_name)
+        list(GET arg_UNITS ${i_plus_one} unit_path)
+
         set (unit_file "${CMAKE_CURRENT_SOURCE_DIR}/${unit_path}/unit.cmake")
         if (NOT EXISTS "${unit_file}")
             _unigraph_message(FATAL_ERROR "Expected to find unit file \"${unit_file}\", but it does not exist")
         endif ()
 
-        _unigraph_message(STATUS "Processing unit file \"${unit_file}\"...")
-        get_filename_component(_UNIGRAPH_CURRENT_UNIT_DIRECTORY "${unit_file}" DIRECTORY) # Used by Unigraph while parsing units
+        _unigraph_message(STATUS "Processing unit \"${unit_name}\" in file \"${unit_file}\"...")
+
+        # Used by Unigraph while parsing units
+        get_filename_component(_UNIGRAPH_CURRENT_UNIT_DIRECTORY "${unit_file}" DIRECTORY)
+        set(_UNIGRAPH_CURRENT_UNIT_NAME "${unit_name}")
+
         include("${unit_file}")
-    endforeach ()
+    endforeach()
     _unigraph_make_unit_targets()
 
-    if (arg_GENERATE_REPORT)
+    if ("${arg_GENERATE_REPORT}" STREQUAL "ON")
         _unigraph_generate_report()
     endif ()
 
-    if (arg_GENERATE_DEPENDENCY_GRAPH)
+    if ("${arg_GENERATE_DEPENDENCY_GRAPH}" STREQUAL "ON")
         _unigraph_generate_dependency_graph_dot_file()
     endif ()
 endfunction(unigraph_init)

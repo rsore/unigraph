@@ -1,3 +1,3 @@
-unigraph_unit(MathConstants
+unigraph_unit(
     HEADERS constants.hpp
 )

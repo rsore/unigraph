@@ -1,4 +1,4 @@
-unigraph_unit(MainEntry
+unigraph_unit(
     NAME MathApplication
     TYPE Executable
     DEPEND

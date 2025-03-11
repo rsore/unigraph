@@ -1,4 +1,4 @@
-unigraph_unit(Geometry
+unigraph_unit(
     DEPEND
         MathConstants
         Algorithms
