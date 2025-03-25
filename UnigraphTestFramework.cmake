@@ -9,7 +9,11 @@ function(_unigraph_initialize_google_test)
     )
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
-    set_property(GLOBAL PROPERTY _UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN "GTest::gtest_main")
+
+    add_library(unigraph_gtest_gmock_bundle INTERFACE)
+    target_link_libraries(unigraph_gtest_gmock_bundle INTERFACE GTest::gtest_main GTest::gmock)
+
+    set_property(GLOBAL PROPERTY _UNIGRAPH_ACTIVE_TEST_FRAMEWORK_TARGET_WITH_MAIN "unigraph_gtest_gmock_bundle")
 endfunction()
 
 function(_unigraph_initialize_catch2)
